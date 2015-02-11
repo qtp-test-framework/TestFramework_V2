@@ -7,11 +7,14 @@
 package com.main;
 
 import com.util.CheckBoxHeader;
+import com.util.ConfigUtility;
 import com.util.Constants;
+import com.util.MailClient;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.util.Properties;
 import java.util.Vector;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -211,7 +214,7 @@ public class MainWindow extends JFrame {
         jPanel.add(lbl_Logs, gbConst);
 
         //Logs Text Field
-        jt_Execution_Logs = new JTextArea(4,5);
+        jt_Execution_Logs = new JTextArea(4, 5);
         //jt_Execution_Logs.setPreferredSize(new Dimension(104, 76));
         jt_Execution_Logs.setMaximumSize(new Dimension(104, 76));
         jt_Execution_Logs.setMinimumSize(new Dimension(104, 76));
@@ -220,7 +223,7 @@ public class MainWindow extends JFrame {
         jt_Execution_Logs.setLineWrap(true);    // If text doesn't fit on a line, jump to the next
         jt_Execution_Logs.setWrapStyleWord(true);   // Makes sure that words stay intact if a line wrap occurs
         jt_Execution_Logs.setEditable(false);
-        
+
 
         gbConst.gridx = 0;
         gbConst.gridy = 7;
@@ -433,26 +436,26 @@ public class MainWindow extends JFrame {
             File log_file = new File(Constants.Execution_Log_Path);
             if (log_file.exists()) {
                 //deleting the existing log file
-                if(!log_file.delete()){
+                if (!log_file.delete()) {
                     System.out.println("Delete Operation Failed...");
                 }
-             }
+            }
             //creating a new blank file
             log_file = new File(Constants.Execution_Log_Path);
-            
-            if(! log_file.createNewFile()){
+
+            if (!log_file.createNewFile()) {
                 System.out.println("File not created....");
             }
             log_file = null;
             //===================================================================================================
-            
-            
+
+
             //Executing the code for running test cases in a seperate Java Thread (SwingWorker in Swing)=========
             SwingWorker<Boolean, Void> runTestCase = new ExecuteTestCases(ae);
             runTestCase.execute();
             //===================================================================================================
 
-            
+
 
             //Displaying Logs of Test Case Exeuction
             FileInputStream fstream = new FileInputStream(
@@ -470,7 +473,7 @@ public class MainWindow extends JFrame {
                 } else {
                     jt_Execution_Logs.append(line + "\n");
                     System.out.println(line);
-                    
+
                     //JtextArea does not display the appended data while other processing is going on without this line
                     jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
                     if (line.indexOf("Ending") != -1) {
@@ -547,10 +550,50 @@ public class MainWindow extends JFrame {
         protected void done() {
             try {
                 System.out.println("Inside Done.....");
+                
+                jt_Execution_Logs.append("Sending Mail..." + "\n");
+                jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
+                
+                sendMail();
+                
+                jt_Execution_Logs.append("Email sent ..." + "\n");
+                
                 jt_Execution_Logs.append("All test cases have been executed..." + "\n");
                 jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
             } catch (Exception ex) {
                 ex.printStackTrace();
+            }
+        }
+
+        private void sendMail() {
+//            if (!validateFields()) {
+//                return;
+//            }
+
+            String toAddress = "mohit.anchan1893@gmail.com";
+            String subject = "This is a test Mail";
+            String message = "Sucessfully sent email from the application";
+
+            File attachFile = null;
+            attachFile = new File(gExcelPath);
+
+//            if (!filePicker.getSelectedFilePath().equals("")) {
+//                File selectedFile = new File(filePicker.getSelectedFilePath());
+//                attachFiles = new File[]{selectedFile};
+//            }
+
+            try {
+                ConfigUtility configUtil = new ConfigUtility();
+                Properties smtpProperties = configUtil.loadProperties();
+                MailClient.sendEmail(smtpProperties, toAddress, subject, message, attachFile);
+
+//                JOptionPane.showMessageDialog(this,
+//                        "The e-mail has been sent successfully!");
+
+            } catch (Exception ex) {
+//                JOptionPane.showMessageDialog(this,
+//                        "Error while sending the e-mail: " + ex.getMessage(),
+//                        "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
