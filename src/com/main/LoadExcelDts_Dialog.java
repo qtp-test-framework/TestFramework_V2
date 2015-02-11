@@ -18,11 +18,17 @@ public class LoadExcelDts_Dialog extends JDialog {
     static JFileChooser jExcelPathChooser;
     static JFileChooser jTestCasePathChooser;
     private MainWindow parent_Window;
+    
+    static String previous_ExcelPath;
+    static String previous_TestCaseFolderPath;
 
-    public LoadExcelDts_Dialog(JFrame parentFrame, String title) {
+    public LoadExcelDts_Dialog(JFrame parentFrame, String title, String excelPath, String testCaseFolderPath) {
         super(parentFrame, title, true);
-        
         this.parent_Window = (MainWindow) parentFrame;
+        
+        //If user had selected a excel file/Test Case Folder earlier then load it by default
+        this.previous_ExcelPath = (excelPath==null) ? "" : excelPath;
+        this.previous_TestCaseFolderPath = (testCaseFolderPath==null) ? "" : testCaseFolderPath;
 
         if (parentFrame != null) {
             Dimension parentSize = parentFrame.getSize();
@@ -40,7 +46,7 @@ public class LoadExcelDts_Dialog extends JDialog {
         gbConst.insets = new Insets(10, 10, 10, 10);
         panel.add(lbl_UsrName, gbConst);
 
-        txt_ExcelPath = new JTextField(35);
+        txt_ExcelPath = new JTextField(this.previous_ExcelPath, 35);
         txt_ExcelPath.setEditable(false);
         gbConst.gridy = 0;
         gbConst.gridx = 1;
@@ -60,7 +66,7 @@ public class LoadExcelDts_Dialog extends JDialog {
         gbConst.insets = new Insets(10, 10, 10, 10);
         panel.add(lbl_Psswd, gbConst);
 
-        txt_TesctCaseFldr = new JTextField(35);
+        txt_TesctCaseFldr = new JTextField(this.previous_TestCaseFolderPath, 35);
         txt_TesctCaseFldr.setEditable(false);
         gbConst.gridy = 1;
         gbConst.gridx = 1;
@@ -101,22 +107,25 @@ public class LoadExcelDts_Dialog extends JDialog {
 
     public void excel_ButtonClick(ActionEvent ae) {
         try {
-            jExcelPathChooser = new JFileChooser();
-
-            jExcelPathChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+            //If user had not selected a excel file earlier then load user's home directory
+            if(previous_ExcelPath == null || previous_ExcelPath.equalsIgnoreCase("")){
+                previous_ExcelPath = System.getProperty("user.home");
+            }
+            jExcelPathChooser = new JFileChooser(previous_ExcelPath);
             jExcelPathChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            jExcelPathChooser.setDialogTitle("Select Test Case Excel file");
+            jExcelPathChooser.setAcceptAllFileFilterUsed(false);
 
             //Only allow .xls & .xlsx files
             jExcelPathChooser.addChoosableFileFilter(new FileNameExtensionFilter("Microsoft Excel Documents", "xls", "xlsx"));
-            jExcelPathChooser.setAcceptAllFileFilterUsed(false);
 
-            int result = jExcelPathChooser.showOpenDialog(null);
-
+            int result = jExcelPathChooser.showOpenDialog(this);
             if (result == JFileChooser.APPROVE_OPTION) {
                 File file = jExcelPathChooser.getSelectedFile();
                 if (!file.getName().endsWith("xls")) {
                     JOptionPane.showMessageDialog(null, "Please select only Excel file.", "Error", JOptionPane.ERROR_MESSAGE);
                 } else {
+                    previous_ExcelPath = file.getPath();
                     txt_ExcelPath.setText(file.getPath());
                 }
             } else {
@@ -129,14 +138,16 @@ public class LoadExcelDts_Dialog extends JDialog {
 
     public void testCaseFldr_ButtonClick(ActionEvent ae) {
         try {
-            jTestCasePathChooser = new JFileChooser();
+            jTestCasePathChooser = new JFileChooser(previous_TestCaseFolderPath);
             jTestCasePathChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             jTestCasePathChooser.setAcceptAllFileFilterUsed(false);
+            jTestCasePathChooser.setDialogTitle("Select QTP Test Case Directory");
+            
             int result = jTestCasePathChooser.showOpenDialog(null);
-
             if (result == JFileChooser.APPROVE_OPTION) {
                 if (jTestCasePathChooser.getCurrentDirectory() != null) {
                     String testCaseFolder = jTestCasePathChooser.getSelectedFile().getPath();
+                    previous_TestCaseFolderPath = testCaseFolder;
                     txt_TesctCaseFldr.setText(testCaseFolder);
                 }
             } else {

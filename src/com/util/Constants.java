@@ -9,7 +9,7 @@ public class Constants {
     public static int TABLE_HEIGHT = 260;
     
     public static int MainWindow_WIDTH = 700;
-    public static int MainWindow_HEIGHT = 500;
+    public static int MainWindow_HEIGHT = 480;
     
     public static String Execution_Log_Path = "Execution_Logs/Execution_Logs.txt";
     
