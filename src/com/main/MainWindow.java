@@ -6,10 +6,7 @@
  */
 package com.main;
 
-import com.util.CheckBoxHeader;
-import com.util.ConfigUtility;
-import com.util.Constants;
-import com.util.MailClient;
+import com.util.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -74,6 +71,29 @@ public class MainWindow extends JFrame {
         this.setVisible(true);
     }
 
+    public static void main(String args[]) {
+        try {
+            //Get System (Microsoft Windows) Look and Feel
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+
+        EventQueue.invokeLater(new Runnable() {
+
+            public void run() {
+                new MainWindow("QTP Automation Framework");
+            }
+        });
+    }
+
     private static void addFileMenu(JFrame frame) {
         try {
             JMenuBar menubar = new JMenuBar();
@@ -91,17 +111,13 @@ public class MainWindow extends JFrame {
             menubar.add(about);
 
             // Add an JMenu
-            JMenu setting = new JMenu("Setting");
+            JMenu setting = new JMenu("Settings");
             setting.setMnemonic('S');
             menubar.add(setting);
 
             // Add an JMenuItem
             jSubMenu_Import = new JMenuItem("Import excel");
             file.add(jSubMenu_Import);
-
-            // Add an JMenuItem
-            jSubMenu_Export = new JMenuItem("Export");
-            file.add(jSubMenu_Export);
 
             jSubMenu_Exit = new JMenuItem("Exit");
             file.add(jSubMenu_Exit);
@@ -130,10 +146,6 @@ public class MainWindow extends JFrame {
             jScrollPane1.setMaximumSize(new Dimension(Constants.TABLE_WIDTH + 18, Constants.TABLE_HEIGHT));
             jScrollPane1.setMinimumSize(new Dimension(Constants.TABLE_WIDTH + 18, Constants.TABLE_HEIGHT));
 
-            //jScrollPane1 = new JScrollPane(table);
-            //jScrollPane1.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-            //jScrollPane1.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-            //jScrollPane1.setViewportView(table);
             gbConst.gridy = 0;
             gbConst.gridx = 0;
             gbConst.gridheight = 3;
@@ -142,8 +154,6 @@ public class MainWindow extends JFrame {
             gbConst.weightx = 50;
             gbConst.weighty = 50;
             gbConst.anchor = GridBagConstraints.WEST;
-
-            //jScrollPane1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
             //addComp(JPanel thePanel, JComponent comp, int xPos, int yPos, int compWidth, int compHeight, int place, int stretch)
             //addComp(jPanel, jScrollPane1, 0, 0, 3, 5, GridBagConstraints.WEST, GridBagConstraints.NONE);
@@ -155,11 +165,12 @@ public class MainWindow extends JFrame {
             gbConst.gridy = 5;
             gbConst.gridheight = 1;
             gbConst.gridwidth = 1;
-            gbConst.insets = new Insets(0, 35, 0, 0);
+            //gbConst.insets = new Insets(0, 35, 0, 0);
+            gbConst.insets = new Insets(0, 10, 0, 0);
             gbConst.weightx = 0;
             gbConst.weighty = 0;
             gbConst.ipady = 5;
-            gbConst.ipadx = 7;
+            gbConst.ipadx = 50;
             gbConst.anchor = GridBagConstraints.WEST;
             jPanel.add(btn_Load, gbConst);
             //addComp(jPanel, btn_Load, 0, 5, 1, 1, GridBagConstraints.WEST, GridBagConstraints.NONE);
@@ -170,12 +181,15 @@ public class MainWindow extends JFrame {
             gbConst.gridy = 5;
             gbConst.gridheight = 1;
             gbConst.gridwidth = 1;
+            //gbConst.insets = new Insets(0, 120, 0, 0);
             gbConst.insets = new Insets(0, 120, 0, 0);
             gbConst.weightx = 0;
             gbConst.weighty = 0;
+            gbConst.ipadx = 50;
             gbConst.anchor = GridBagConstraints.EAST;
             //addComp(jPanel, btn_Execute, 1, 5, 1, 1, GridBagConstraints.WEST, GridBagConstraints.NONE);
             jPanel.add(btn_Execute, gbConst);
+
 
             //ExcelPath Lbl
             lbl_ExcelPath = new JLabel("Excel Path : ");
@@ -188,6 +202,7 @@ public class MainWindow extends JFrame {
             gbConst.insets = new Insets(40, 20, 0, 0);
             gbConst.weightx = 0;
             gbConst.weighty = 0;
+            gbConst.ipadx = 0;
             gbConst.anchor = GridBagConstraints.WEST;
             //addComp(jPanel, lbl_ExcelPath, 3, 0, 1, 1, GridBagConstraints.EAST, GridBagConstraints.NONE);
             jPanel.add(lbl_ExcelPath, gbConst);
@@ -296,39 +311,13 @@ public class MainWindow extends JFrame {
         try {
             //Menu Components
             jSubMenu_Exit.addActionListener(new CustomButtonListener());
-            
+
             //Frame Components
             btn_Load.addActionListener(new CustomButtonListener());
             btn_Execute.addActionListener(new CustomButtonListener());
         } catch (Exception ex) {
             ex.printStackTrace();;
         }
-    }
-
-    public static void main(String args[]) {
-        try {
-            //Get System (Microsoft Windows) Look and Feel
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-
-        /*
-         * Create and display the form
-         */
-        EventQueue.invokeLater(new Runnable() {
-
-            public void run() {
-                new MainWindow("QTP Automation Framework");
-            }
-        });
     }
 
     public static void initTable() {
@@ -361,9 +350,7 @@ public class MainWindow extends JFrame {
             int tableHeight = model.getRowCount() * 25; //not in use
 
             //table.setPreferredSize(new Dimension(Constants.TABLE_WIDTH, Constants.TABLE_HEIGHT));
-
             table.setPreferredScrollableViewportSize(new Dimension(Constants.TABLE_WIDTH, Constants.TABLE_HEIGHT));
-
             //setting Table Column Header properties
             setTblColumn_Properties(Constants.TABLE_WIDTH);
 
@@ -390,6 +377,7 @@ public class MainWindow extends JFrame {
 
     }
 
+    //Finction to set properties of the JTable column header
     public static void setTblColumn_Properties(int tableWidth) {
         try {
             //Setting width of individual column
@@ -484,7 +472,8 @@ public class MainWindow extends JFrame {
             Component component = (Component) ae.getSource();
             JFrame mainFrame = (JFrame) SwingUtilities.getRoot(component);
 
-            LoadExcelDts_Dialog excel_Dlg = new LoadExcelDts_Dialog(mainFrame, "Excel Import Details", gExcelPath, gTestCaseFolder);
+            new LoadExcelDts_Dialog(mainFrame, "Excel Import Details", gExcelPath, gTestCaseFolder);
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -492,6 +481,10 @@ public class MainWindow extends JFrame {
 
     public void execute_ButtonClick(ActionEvent ae) {
         try {
+            if (!validateBeforeExecute()) {
+                return;
+            }
+
             //Resetting the Execution Log File =========================================================
             File log_file = new File(Constants.Execution_Log_Path);
             if (log_file.exists()) {
@@ -515,35 +508,65 @@ public class MainWindow extends JFrame {
             runTestCase.execute();
             //===================================================================================================
 
-            //Displaying Logs of Test Case Exeuction
-            FileInputStream fstream = new FileInputStream(
-                    "Execution_Logs/Execution_Logs.txt");
+            //Executing the code for displaying Execution Logs in a seperate Java Thread (SwingWorker in Swing)=========
+            SwingWorker<Boolean, Void> displayLogs = new DisplayLogs(ae);
+            displayLogs.execute();
+            //===================================================================================================
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
-            String line;
-            jt_Execution_Logs.setText("");
-
-            while (true) {
-
-                line = br.readLine();
-                if (line == null) {
-                    Thread.sleep(500);
-                } else {
-                    jt_Execution_Logs.append(line + "\n");
-                    System.out.println(line);
-
-                    //JtextArea does not display the appended data while other processing is going on without this line
-                    jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
-                    if (line.indexOf("Ending") != -1) {
-                        break;
-                    }
-                }
-
-            }
-            fstream.close();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private boolean validateBeforeExecute() {
+        try {
+            //chk if Excel has not been imported by the user
+            if (gExcelPath == null || gExcelPath.equals("")) {
+                JOptionPane.showMessageDialog(this,
+                        "Please import the Test Cases excel file first by clicking the Load button!",
+                        "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
+                btn_Load.requestFocus();
+                return false;
+            }
+
+            //chk if Test Case Folder has not been set by the user
+            if (gTestCaseFolder == null || gTestCaseFolder.equals("")) {
+                JOptionPane.showMessageDialog(this,
+                        "Please select the Test Cases folder!",
+                        "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
+                btn_Load.requestFocus();
+                return false;
+            }
+
+            //chk if atleast one Test case has been checked by the user
+            if(!checkTestCases_Checked()){
+                JOptionPane.showMessageDialog(this,
+                        "Please select atleast one test case from the list!",
+                        "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
+                btn_Load.requestFocus();
+                return false;
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return true;
+    }
+
+    private boolean checkTestCases_Checked(){
+        boolean isChecked = false;
+        try {
+            for (int i = 0; i < table.getRowCount(); i++) {
+                isChecked = (Boolean) table.getValueAt(i, 0);
+
+                if (isChecked) {
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return isChecked;
     }
 
     public void exit_MenuClick(ActionEvent ae) {
@@ -575,7 +598,7 @@ public class MainWindow extends JFrame {
                 JFrame frame = (JFrame) SwingUtilities.getRoot(component);
 
                 //minimize the Framework window when the execute button is clicked
-                //frame.setState(Frame.ICONIFIED);
+                frame.setState(Frame.ICONIFIED);
 
                 //get the list of selected checkboxes
                 for (int i = 0; i < table.getRowCount(); i++) {
@@ -613,18 +636,27 @@ public class MainWindow extends JFrame {
 
         @Override
         protected void done() {
+            boolean sendMail = true;
             try {
                 System.out.println("Inside Done.....");
 
-                jt_Execution_Logs.append("Sending Mail..." + "\n");
-                jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
+                LogUtility.writeToLog(jt_Execution_Logs, "Sending Mail...", true);
+//                jt_Execution_Logs.append("Sending Mail..." + "\n");
+//                jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
 
-                sendMail();
+                //Sending the Email
+                if (sendMail) {
+                    sendMail();
+                }
 
-                jt_Execution_Logs.append("Email sent ..." + "\n");
+                LogUtility.writeToLog(jt_Execution_Logs, "Email sent ...", true);
+//                jt_Execution_Logs.append("Email sent ..." + "\n");
 
-                jt_Execution_Logs.append("All test cases have been executed..." + "\n");
-                jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
+                LogUtility.writeToLog(jt_Execution_Logs, "All test cases have been executed...", true);
+//                jt_Execution_Logs.append("All test cases have been executed..." + "\n");
+//                jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
+
+                System.out.println("ExecuteTestCases completed");
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -664,6 +696,7 @@ public class MainWindow extends JFrame {
         }
     }
 
+    //A seperate thread to display Execution logs in a JTextArea
     private final class DisplayLogs extends SwingWorker<Boolean, Void> {
 
         private ActionEvent mActionEvent;
@@ -674,19 +707,38 @@ public class MainWindow extends JFrame {
 
         @Override
         protected Boolean doInBackground() throws Exception {
-            boolean result = false;
-            StringBuffer selChkBox_Str = new StringBuffer();
-            int colNumIn_Excel = 0;
+            boolean result = true;
+            FileInputStream fstream = null;
             try {
-                //get the parent Jframe Object
-                Component component = (Component) mActionEvent.getSource();
-                JFrame frame = (JFrame) SwingUtilities.getRoot(component);
+                //Displaying Logs of Test Case Exeuction
+                fstream = new FileInputStream(Constants.Execution_Log_Path);
 
-                //minimize the Framework window when the execute button is clicked
-                //frame.setState(Frame.ICONIFIED);
+                BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+                String line;
+                jt_Execution_Logs.setText("");
 
+                while (true) {
+                    line = br.readLine();
+                    if (line == null) {
+                        Thread.sleep(500);
+                    } else {
+                        LogUtility.writeToLog(jt_Execution_Logs, line, true);
+                        System.out.println(line);
+
+//                        jt_Execution_Logs.append(line + "\n");
+//                        jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
+                        if (line.indexOf("Ending") != -1) {
+                            break;
+                        }
+                    }
+                }
             } catch (Exception ex) {
+                result = false;
                 ex.printStackTrace();
+            } finally {
+                if (fstream != null) {
+                    fstream.close();
+                }
             }
             return result;
         }
@@ -694,51 +746,9 @@ public class MainWindow extends JFrame {
         @Override
         protected void done() {
             try {
-                System.out.println("Inside Done.....");
-
-                jt_Execution_Logs.append("Sending Mail..." + "\n");
-                jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
-
-                sendMail();
-
-                jt_Execution_Logs.append("Email sent ..." + "\n");
-
-                jt_Execution_Logs.append("All test cases have been executed..." + "\n");
-                jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
+                System.out.println("DisplayLogs completed");
             } catch (Exception ex) {
                 ex.printStackTrace();
-            }
-        }
-
-        private void sendMail() {
-//            if (!validateFields()) {
-//                return;
-//            }
-
-            String toAddress = "mohit.anchan1893@gmail.com";
-            String subject = "This is a test Mail";
-            String message = "Sucessfully sent email from the application";
-
-            File attachFile = null;
-            attachFile = new File(gExcelPath);
-
-//            if (!filePicker.getSelectedFilePath().equals("")) {
-//                File selectedFile = new File(filePicker.getSelectedFilePath());
-//                attachFiles = new File[]{selectedFile};
-//            }
-
-            try {
-                ConfigUtility configUtil = new ConfigUtility();
-                Properties smtpProperties = configUtil.loadProperties();
-                MailClient.sendEmail(smtpProperties, toAddress, subject, message, attachFile);
-
-//                JOptionPane.showMessageDialog(this,
-//                        "The e-mail has been sent successfully!");
-
-            } catch (Exception ex) {
-//                JOptionPane.showMessageDialog(this,
-//                        "Error while sending the e-mail: " + ex.getMessage(),
-//                        "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

@@ -1,5 +1,0 @@
-Getting the selected Testcases
-Loading Test Case : ExportDataTblToExcel
-Starting Test Case : ExportDataTblToExcel
-Execution complete...All test cases have been executed
-Ending

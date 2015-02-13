@@ -18,17 +18,16 @@ public class LoadExcelDts_Dialog extends JDialog {
     static JFileChooser jExcelPathChooser;
     static JFileChooser jTestCasePathChooser;
     private MainWindow parent_Window;
-    
     static String previous_ExcelPath;
     static String previous_TestCaseFolderPath;
 
     public LoadExcelDts_Dialog(JFrame parentFrame, String title, String excelPath, String testCaseFolderPath) {
         super(parentFrame, title, true);
         this.parent_Window = (MainWindow) parentFrame;
-        
+
         //If user had selected a excel file/Test Case Folder earlier then load it by default
-        this.previous_ExcelPath = (excelPath==null) ? "" : excelPath;
-        this.previous_TestCaseFolderPath = (testCaseFolderPath==null) ? "" : testCaseFolderPath;
+        this.previous_ExcelPath = (excelPath == null) ? "" : excelPath;
+        this.previous_TestCaseFolderPath = (testCaseFolderPath == null) ? "" : testCaseFolderPath;
 
         if (parentFrame != null) {
             Dimension parentSize = parentFrame.getSize();
@@ -108,7 +107,7 @@ public class LoadExcelDts_Dialog extends JDialog {
     public void excel_ButtonClick(ActionEvent ae) {
         try {
             //If user had not selected a excel file earlier then load user's home directory
-            if(previous_ExcelPath == null || previous_ExcelPath.equalsIgnoreCase("")){
+            if (previous_ExcelPath == null || previous_ExcelPath.equalsIgnoreCase("")) {
                 previous_ExcelPath = System.getProperty("user.home");
             }
             jExcelPathChooser = new JFileChooser(previous_ExcelPath);
@@ -142,11 +141,11 @@ public class LoadExcelDts_Dialog extends JDialog {
             jTestCasePathChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             jTestCasePathChooser.setAcceptAllFileFilterUsed(false);
             jTestCasePathChooser.setDialogTitle("Select QTP Test Case Directory");
-            
+
             int result = jTestCasePathChooser.showOpenDialog(null);
             if (result == JFileChooser.APPROVE_OPTION) {
                 if (jTestCasePathChooser.getCurrentDirectory() != null) {
-                    String testCaseFolder = jTestCasePathChooser.getSelectedFile().getPath();
+                    String testCaseFolder = jTestCasePathChooser.getSelectedFile().getPath() + "\\";
                     previous_TestCaseFolderPath = testCaseFolder;
                     txt_TesctCaseFldr.setText(testCaseFolder);
                 }
@@ -161,15 +160,22 @@ public class LoadExcelDts_Dialog extends JDialog {
     public void import_ButtonClick(ActionEvent ae) {
         try {
             String excelPath = txt_ExcelPath.getText();
-            String testCaseFolder = txt_TesctCaseFldr.getText() + "\\";
-            
+            String testCaseFolder = txt_TesctCaseFldr.getText();
+
+            if (!validateFields(excelPath, testCaseFolder)) {
+                return;
+            }
+
             //replacing all spaces in the path with '$$', as spaces cause problems while passing to vbscript file
             excelPath = excelPath.replace(" ", "$$");
             testCaseFolder = testCaseFolder.replace(" ", "$$");
-            
-            if(parent_Window != null){
+
+            if (parent_Window != null) {
                 parent_Window.setImportChanges(excelPath, testCaseFolder);
             }
+
+            //Close current Frame after saving..
+            dispose();
             
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -184,6 +190,33 @@ public class LoadExcelDts_Dialog extends JDialog {
         }
     }
 
+    private boolean validateFields(String excelPath, String testCaseFolder) {
+        try {
+            //chk if Excel has not been imported by the user
+            if (excelPath == null || excelPath.equals("")) {
+                JOptionPane.showMessageDialog(this,
+                        "Please select the Test Cases excel file!",
+                        "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
+                btn_BrowseExcel.requestFocus();
+                return false;
+            }
+
+            //chk if Test Case Folder has not been set by the user
+            if (testCaseFolder == null || testCaseFolder.equals("")) {
+                JOptionPane.showMessageDialog(this,
+                        "Please select the Test Cases folder !",
+                        "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
+                btn_BrowseTestCase.requestFocus();
+                return false;
+            }
+
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return true;
+    }
+
     public class CustomButtonListener implements ActionListener {
 
         @Override
@@ -194,7 +227,6 @@ public class LoadExcelDts_Dialog extends JDialog {
                 testCaseFldr_ButtonClick(ae);
             } else if (ae.getSource() == btn_Import) {
                 import_ButtonClick(ae);
-                dispose();
             } else if (ae.getSource() == btn_CloseWindow) {
                 closeWindow_ButtonClick(ae);
             }
