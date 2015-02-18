@@ -1,0 +1,5 @@
+Launching QTP....
+Retrieving the selected Testcases
+Loading Test Case : LoadFromExcel
+Starting Test Case : LoadFromExcel
+Loading Test Case : Testing0
