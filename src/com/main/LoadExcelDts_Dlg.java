@@ -1,13 +1,15 @@
 package com.main;
 
+import com.util.Constants;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.util.prefs.Preferences;
 
-public class LoadExcelDts_Dialog extends JDialog {
+public class LoadExcelDts_Dlg extends JDialog {
 
     static JTextField txt_ExcelPath;
     static JTextField txt_TesctCaseFldr;
@@ -20,23 +22,28 @@ public class LoadExcelDts_Dialog extends JDialog {
     private MainWindow parent_Window;
     static String previous_ExcelPath;
     static String previous_TestCaseFolderPath;
+    Preferences user_prefs;
 
-    public LoadExcelDts_Dialog(JFrame parentFrame, String title, String excelPath, String testCaseFolderPath) {
+    public LoadExcelDts_Dlg(JFrame parentFrame, String title, Preferences main_prefs) {
         super(parentFrame, title, true);
         this.parent_Window = (MainWindow) parentFrame;
+        this.user_prefs = main_prefs;
+        
+        //API for persistent storage of user preferences
+//        user_prefs = Preferences.userNodeForPackage(LoadExcelDts_Dlg.class);
+        
+        //If user had selected a excel file/Test Case Folder earlier then load it by default (else set it as blank "")
+        this.previous_ExcelPath = user_prefs.get(Constants.EXCEL_PREF, System.getProperty("user.home"));
+        this.previous_TestCaseFolderPath = user_prefs.get(Constants.TEST_FOLDER_PREF, System.getProperty("user.home"));    
 
-        //If user had selected a excel file/Test Case Folder earlier then load it by default
-        this.previous_ExcelPath = (excelPath == null) ? "" : excelPath;
-        this.previous_TestCaseFolderPath = (testCaseFolderPath == null) ? "" : testCaseFolderPath;
-
+        //set window location relative to its parent window
         if (parentFrame != null) {
             Dimension parentSize = parentFrame.getSize();
             Point p = parentFrame.getLocation();
-            setLocation(p.x + parentSize.width / 4, p.y + parentSize.height / 4);
+            setLocation(p.x + parentSize.width / 7, p.y + parentSize.height / 4);
         }
 
         JPanel panel = new JPanel(new GridBagLayout());
-        getContentPane().add(panel, BorderLayout.NORTH);
         GridBagConstraints gbConst = new GridBagConstraints();
 
         JLabel lbl_UsrName = new JLabel("Excel File Path: ");
@@ -97,6 +104,8 @@ public class LoadExcelDts_Dialog extends JDialog {
         panel.add(btn_CloseWindow, gbConst);
         btn_CloseWindow.addActionListener(new CustomButtonListener());
 
+        getContentPane().add(panel, BorderLayout.NORTH);
+        
         this.setSize(500, 200);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.pack();
@@ -107,9 +116,9 @@ public class LoadExcelDts_Dialog extends JDialog {
     public void excel_ButtonClick(ActionEvent ae) {
         try {
             //If user had not selected a excel file earlier then load user's home directory
-            if (previous_ExcelPath == null || previous_ExcelPath.equalsIgnoreCase("")) {
-                previous_ExcelPath = System.getProperty("user.home");
-            }
+//            if (previous_ExcelPath == null || previous_ExcelPath.equalsIgnoreCase("")) {
+//                previous_ExcelPath = System.getProperty("user.home");
+//            }
             jExcelPathChooser = new JFileChooser(previous_ExcelPath);
             jExcelPathChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             jExcelPathChooser.setDialogTitle("Select Test Case Excel file");
@@ -124,8 +133,9 @@ public class LoadExcelDts_Dialog extends JDialog {
                 if (!file.getName().endsWith("xls")) {
                     JOptionPane.showMessageDialog(null, "Please select only Excel file.", "Error", JOptionPane.ERROR_MESSAGE);
                 } else {
-                    previous_ExcelPath = file.getPath();
+//                    previous_ExcelPath = file.getPath();
                     txt_ExcelPath.setText(file.getPath());
+                    user_prefs.put(Constants.EXCEL_PREF, file.getPath());
                 }
             } else {
                 System.out.println("Cancel button clicked");
@@ -146,8 +156,9 @@ public class LoadExcelDts_Dialog extends JDialog {
             if (result == JFileChooser.APPROVE_OPTION) {
                 if (jTestCasePathChooser.getCurrentDirectory() != null) {
                     String testCaseFolder = jTestCasePathChooser.getSelectedFile().getPath() + "\\";
-                    previous_TestCaseFolderPath = testCaseFolder;
+//                    previous_TestCaseFolderPath = testCaseFolder;
                     txt_TesctCaseFldr.setText(testCaseFolder);
+                    user_prefs.put(Constants.TEST_FOLDER_PREF, testCaseFolder);
                 }
             } else {
                 System.out.println("Cancel button clicked");

@@ -3,7 +3,7 @@ package com.util;
 import javax.swing.JTextArea;
 
 public class LogUtility {
-
+    //function used to write the execution logs into the Log Text Area
     public static void writeToLog(JTextArea jt_Execution_Logs, String message, boolean breakToNextLine) {
         if (jt_Execution_Logs != null) {
             if (breakToNextLine) {

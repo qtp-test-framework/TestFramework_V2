@@ -1,33 +1,14 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package com.util;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Properties;
+import javax.mail.*;
+import javax.mail.internet.*;
 
-import javax.mail.Authenticator;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
-/**
- * A utility class that sends an e-mail message with attachments.
- *
- * @author www.codejava.net
- *
- */
 public class MailClient {
 
     public static void sendEmail(Properties smtpProperties, String toAddress,
@@ -43,7 +24,6 @@ public class MailClient {
 
             // creates a new session with an authenticator
             Authenticator auth = new Authenticator() {
-
                 public PasswordAuthentication getPasswordAuthentication() {
                     return new PasswordAuthentication(userName, password);
                 }
@@ -71,20 +51,6 @@ public class MailClient {
             MimeBodyPart attachPart = new MimeBodyPart();
             attachPart.attachFile(attachedFile);
             multipart.addBodyPart(attachPart);
-//        
-//        if (attachFiles != null && attachFiles.length > 0) {
-//            for (File aFile : attachFiles) {
-//                MimeBodyPart attachPart = new MimeBodyPart();
-// 
-//                try {
-//                    attachPart.attachFile(aFile);
-//                } catch (IOException ex) {
-//                    throw ex;
-//                }
-// 
-//                multipart.addBodyPart(attachPart);
-//            }
-//        }
 
             // sets the multi-part as e-mail's content
             msg.setContent(multipart);

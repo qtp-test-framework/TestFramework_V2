@@ -6,6 +6,8 @@
  */
 package com.main;
 
+import com.mail.MailSettings_Dlg;
+import com.pojo.MailTemplate;
 import com.util.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -13,6 +15,7 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.Properties;
 import java.util.Vector;
+import java.util.prefs.Preferences;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableColumn;
@@ -36,18 +39,22 @@ public class MainWindow extends JFrame {
     private static JTable table;
     private static JTextArea jt_Execution_Logs;
     private static JMenuItem jSubMenu_Import;
-    private static JMenuItem jSubMenu_Export;
     private static JMenuItem jSubMenu_Exit;
+    private static JMenuItem jSubMenu_MailSttngs;
     // End of variables declaration
     static CustomTableModel model = null;
     static Vector headers = new Vector();
     static Vector data = new Vector();
-    String gExcelPath = "";
-    String gTestCaseFolder = "";
+    static String gExcelPath = "";
+    static String gTestCaseFolder = "";
+    public JFrame main_frame;
+    Preferences user_prefs;
 
     public MainWindow(String title) {
         super(title);
-
+        this.main_frame = (MainWindow) this;
+        
+        loadData();
         addFileMenu(this);
         addComponentsToPane(this.getContentPane());
         addComponent_Listeners();
@@ -99,30 +106,29 @@ public class MainWindow extends JFrame {
             JMenuBar menubar = new JMenuBar();
             frame.setJMenuBar(menubar);
 
-            // Add an JMenu
+            // File Menu
             JMenu file = new JMenu("File");
             file.setMnemonic('F');
             menubar.add(file);
-
-
-            // Add an JMenu
-            JMenu about = new JMenu("About");
-            about.setMnemonic('A');
-            menubar.add(about);
-
-            // Add an JMenu
-            JMenu setting = new JMenu("Settings");
-            setting.setMnemonic('S');
-            menubar.add(setting);
-
-            // Add an JMenuItem
+            
+            // File Sub Menus
             jSubMenu_Import = new JMenuItem("Import excel");
             file.add(jSubMenu_Import);
 
             jSubMenu_Exit = new JMenuItem("Exit");
             file.add(jSubMenu_Exit);
 
-            // Add an JMenu
+            //Settings Menu
+            JMenu setting = new JMenu("Settings");
+            setting.setMnemonic('S');
+            menubar.add(setting);
+            
+            //Settings Sub Menu
+            jSubMenu_MailSttngs = new JMenuItem("Mail Settings");
+            jSubMenu_MailSttngs.setMnemonic('M');
+            setting.add(jSubMenu_MailSttngs);
+
+            // Help Menu
             JMenu help = new JMenu("Help");
             help.setMnemonic('H');
             menubar.add(help);
@@ -130,6 +136,14 @@ public class MainWindow extends JFrame {
         } catch (Exception ex) {
             ex.printStackTrace();;
         }
+    }
+    
+    public void loadData(){
+        //API for persistent storage of user preferences
+        user_prefs = Preferences.userNodeForPackage(MainWindow.class);
+        
+        gExcelPath = user_prefs.get(Constants.EXCEL_PREF, "");
+        gTestCaseFolder = user_prefs.get(Constants.TEST_FOLDER_PREF, "");
     }
 
     public static void addComponentsToPane(Container pane) {
@@ -226,7 +240,7 @@ public class MainWindow extends JFrame {
             gbConst.anchor = GridBagConstraints.WEST;
             //addComp(jPanel, lbl_ExcelPath, 3, 0, 1, 1, GridBagConstraints.EAST, GridBagConstraints.NONE);
             jPanel.add(jt_ExcelPath_Val, gbConst);
-            jt_ExcelPath_Val.setText("");    //"D:\\Mohit\\QTP\\QTP_Excel\\QTP_Excel\\QTP_Excel\\Batch.xls
+            jt_ExcelPath_Val.setText(gExcelPath);    //"D:\\Mohit\\QTP\\QTP_Excel\\QTP_Excel\\QTP_Excel\\Batch.xls
 
             //Test Case Folder Label
             lbl_TestCaseFolder = new JLabel("Test Case Folder : ");
@@ -249,6 +263,7 @@ public class MainWindow extends JFrame {
             jt_TestCaseFolder_Val.setMinimumSize(new Dimension(280, 10));
             jt_TestCaseFolder_Val.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
             jt_TestCaseFolder_Val.setEditable(false);
+            jt_TestCaseFolder_Val.setText(gTestCaseFolder);
             gbConst.gridx = 3;
             gbConst.gridy = 1;
             gbConst.gridheight = 1;
@@ -260,7 +275,7 @@ public class MainWindow extends JFrame {
             gbConst.weighty = 0;
             gbConst.anchor = GridBagConstraints.WEST;
             jPanel.add(jt_TestCaseFolder_Val, gbConst);
-
+            
             //Logs Label
             lbl_Logs = new JLabel("Logs : ");
             gbConst.gridx = 0;
@@ -280,12 +295,10 @@ public class MainWindow extends JFrame {
             //jt_Execution_Logs.setPreferredSize(new Dimension(104, 76));
             jt_Execution_Logs.setMaximumSize(new Dimension(104, 76));
             jt_Execution_Logs.setMinimumSize(new Dimension(104, 76));
-
             jt_Execution_Logs.setText("");
             jt_Execution_Logs.setLineWrap(true);    // If text doesn't fit on a line, jump to the next
             jt_Execution_Logs.setWrapStyleWord(true);   // Makes sure that words stay intact if a line wrap occurs
             jt_Execution_Logs.setEditable(false);
-
 
             gbConst.gridx = 0;
             gbConst.gridy = 7;
@@ -300,6 +313,7 @@ public class MainWindow extends JFrame {
             scrollbar_Log.setMinimumSize(jt_Execution_Logs.getPreferredSize());
             jPanel.add(scrollbar_Log, gbConst);
 
+            //used to padding for components from the panel's edges
             jPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
             pane.add(jPanel);
         } catch (Exception ex) {
@@ -311,6 +325,7 @@ public class MainWindow extends JFrame {
         try {
             //Menu Components
             jSubMenu_Exit.addActionListener(new CustomButtonListener());
+            jSubMenu_MailSttngs.addActionListener(new CustomButtonListener());
 
             //Frame Components
             btn_Load.addActionListener(new CustomButtonListener());
@@ -471,8 +486,8 @@ public class MainWindow extends JFrame {
         try {
             Component component = (Component) ae.getSource();
             JFrame mainFrame = (JFrame) SwingUtilities.getRoot(component);
-
-            new LoadExcelDts_Dialog(mainFrame, "Excel Import Details", gExcelPath, gTestCaseFolder);
+            
+            new LoadExcelDts_Dlg(mainFrame, "Excel Import Details", user_prefs);
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -481,6 +496,7 @@ public class MainWindow extends JFrame {
 
     public void execute_ButtonClick(ActionEvent ae) {
         try {
+            //dont proceed with execution if validation fails
             if (!validateBeforeExecute()) {
                 return;
             }
@@ -513,6 +529,15 @@ public class MainWindow extends JFrame {
             displayLogs.execute();
             //===================================================================================================
 
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    //Email Settings Dialog
+    public void mail_MenuClick(ActionEvent ae) {
+        try {
+            new MailSettings_Dlg(main_frame, "Mail Settings");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -663,32 +688,32 @@ public class MainWindow extends JFrame {
         }
 
         private void sendMail() {
-//            if (!validateFields()) {
-//                return;
-//            }
-
-            String toAddress = "mohit.anchan1893@gmail.com";
-            //String toAddress = "abhisheksingh.itian@gmail.com";
-            String subject = "This is a test Mail";
-            String message = "Sucessfully sent email from the application";
+//            String toAddress = "mohit.anchan1893@gmail.com";
+//            //String toAddress = "abhisheksingh.itian@gmail.com";
+//            String subject = "This is a test Mail";
+//            String message = "Sucessfully sent email from the application";
+            
+            //Loading the Mail Template Saved by user
+            XStreamUtil xUtil = new XStreamUtil();
+            MailTemplate mailTemplate = (MailTemplate) xUtil.load_data_from_XML(Constants.MAIL_TEMPLATE_FILE);
 
             File attachFile = null;
             attachFile = new File(gExcelPath);
 
-//            if (!filePicker.getSelectedFilePath().equals("")) {
-//                File selectedFile = new File(filePicker.getSelectedFilePath());
-//                attachFiles = new File[]{selectedFile};
-//            }
-
             try {
                 ConfigUtility configUtil = new ConfigUtility();
                 Properties smtpProperties = configUtil.loadProperties();
-                MailClient.sendEmail(smtpProperties, toAddress, subject, message, attachFile);
+                MailClient.sendEmail(smtpProperties, 
+                                        mailTemplate.getTo(), 
+                                        mailTemplate.getSubject(), 
+                                        mailTemplate.getBody(), 
+                                        attachFile);
 
 //                JOptionPane.showMessageDialog(this,
 //                        "The e-mail has been sent successfully!");
 
             } catch (Exception ex) {
+                ex.printStackTrace();
 //                JOptionPane.showMessageDialog(this,
 //                        "Error while sending the e-mail: " + ex.getMessage(),
 //                        "Error", JOptionPane.ERROR_MESSAGE);
@@ -763,6 +788,8 @@ public class MainWindow extends JFrame {
                 execute_ButtonClick(ae);
             } else if (ae.getSource() == jSubMenu_Exit) {
                 exit_MenuClick(ae);
+            } else if (ae.getSource() == jSubMenu_MailSttngs) {
+                mail_MenuClick(ae);
             }
         }
     }
