@@ -14,7 +14,6 @@ public class MailClient {
     public static void sendEmail(Properties smtpProperties, String toAddress,
             String subject, String message, File attachedFile)
             throws AddressException, MessagingException, IOException {
-        try {
             final String userName = smtpProperties.getProperty("mail.user");
             final String password = smtpProperties.getProperty("mail.password");
 
@@ -55,12 +54,9 @@ public class MailClient {
             // sets the multi-part as e-mail's content
             msg.setContent(multipart);
             
-            System.out.println("Sending Email..");
             // sends the e-mail
             Transport.send(msg);
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        
     }
 }

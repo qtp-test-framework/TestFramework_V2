@@ -16,6 +16,8 @@ import java.io.*;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.prefs.Preferences;
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableColumn;
@@ -53,7 +55,7 @@ public class MainWindow extends JFrame {
     public MainWindow(String title) {
         super(title);
         this.main_frame = (MainWindow) this;
-        
+
         loadData();
         addFileMenu(this);
         addComponentsToPane(this.getContentPane());
@@ -110,7 +112,7 @@ public class MainWindow extends JFrame {
             JMenu file = new JMenu("File");
             file.setMnemonic('F');
             menubar.add(file);
-            
+
             // File Sub Menus
             jSubMenu_Import = new JMenuItem("Import excel");
             file.add(jSubMenu_Import);
@@ -122,7 +124,7 @@ public class MainWindow extends JFrame {
             JMenu setting = new JMenu("Settings");
             setting.setMnemonic('S');
             menubar.add(setting);
-            
+
             //Settings Sub Menu
             jSubMenu_MailSttngs = new JMenuItem("Mail Settings");
             jSubMenu_MailSttngs.setMnemonic('M');
@@ -137,11 +139,11 @@ public class MainWindow extends JFrame {
             ex.printStackTrace();;
         }
     }
-    
-    public void loadData(){
+
+    public void loadData() {
         //API for persistent storage of user preferences
         user_prefs = Preferences.userNodeForPackage(MainWindow.class);
-        
+
         gExcelPath = user_prefs.get(Constants.EXCEL_PREF, "");
         gTestCaseFolder = user_prefs.get(Constants.TEST_FOLDER_PREF, "");
     }
@@ -275,7 +277,7 @@ public class MainWindow extends JFrame {
             gbConst.weighty = 0;
             gbConst.anchor = GridBagConstraints.WEST;
             jPanel.add(jt_TestCaseFolder_Val, gbConst);
-            
+
             //Logs Label
             lbl_Logs = new JLabel("Logs : ");
             gbConst.gridx = 0;
@@ -486,7 +488,7 @@ public class MainWindow extends JFrame {
         try {
             Component component = (Component) ae.getSource();
             JFrame mainFrame = (JFrame) SwingUtilities.getRoot(component);
-            
+
             new LoadExcelDts_Dlg(mainFrame, "Excel Import Details", user_prefs);
 
         } catch (Exception ex) {
@@ -496,10 +498,16 @@ public class MainWindow extends JFrame {
 
     public void execute_ButtonClick(ActionEvent ae) {
         try {
+            jt_Execution_Logs.setText("");
+            LogUtility.writeToLog(jt_Execution_Logs, "Validating Input data...", true);
+
             //dont proceed with execution if validation fails
             if (!validateBeforeExecute()) {
+                LogUtility.writeToLog(jt_Execution_Logs, "Validation failed", true);
                 return;
             }
+
+            LogUtility.writeToLog(jt_Execution_Logs, "Validation complete", true);
 
             //Resetting the Execution Log File =========================================================
             File log_file = new File(Constants.Execution_Log_Path);
@@ -518,6 +526,7 @@ public class MainWindow extends JFrame {
             log_file = null;
             //===================================================================================================
 
+            LogUtility.writeToLog(jt_Execution_Logs, "Initialising Execution...", true);
 
             //Executing the code for running test cases in a seperate Java Thread (SwingWorker in Swing)=========
             SwingWorker<Boolean, Void> runTestCase = new ExecuteTestCases(ae);
@@ -564,7 +573,7 @@ public class MainWindow extends JFrame {
             }
 
             //chk if atleast one Test case has been checked by the user
-            if(!checkTestCases_Checked()){
+            if (!checkTestCases_Checked()) {
                 JOptionPane.showMessageDialog(this,
                         "Please select atleast one test case from the list!",
                         "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
@@ -578,7 +587,7 @@ public class MainWindow extends JFrame {
         return true;
     }
 
-    private boolean checkTestCases_Checked(){
+    private boolean checkTestCases_Checked() {
         boolean isChecked = false;
         try {
             for (int i = 0; i < table.getRowCount(); i++) {
@@ -595,11 +604,7 @@ public class MainWindow extends JFrame {
     }
 
     public void exit_MenuClick(ActionEvent ae) {
-        try {
-            System.exit(0);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        System.exit(0);
     }
 
     //Here 1st parameter is the returnType
@@ -607,6 +612,7 @@ public class MainWindow extends JFrame {
     private final class ExecuteTestCases extends SwingWorker<Boolean, Void> {
 
         private ActionEvent mActionEvent;
+        private boolean isError = false;
 
         public ExecuteTestCases(ActionEvent vActionEvent) {
             this.mActionEvent = vActionEvent;
@@ -633,7 +639,6 @@ public class MainWindow extends JFrame {
                         //Column at pos 0 in Jtable would be in position 2 in main excel
                         colNumIn_Excel = i + 2;
 
-                        System.out.println("colNumIn_Excel = " + colNumIn_Excel);
                         if (selChkBox_Str.toString().equalsIgnoreCase("")) {
                             selChkBox_Str.append(colNumIn_Excel);
                         } else {
@@ -653,6 +658,9 @@ public class MainWindow extends JFrame {
                 p.waitFor();
 
                 System.out.println("Execution Complete and Exit Value = " + p.exitValue());
+                if (p.exitValue() != 0) {
+                    isError = true;
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -661,38 +669,32 @@ public class MainWindow extends JFrame {
 
         @Override
         protected void done() {
-            boolean sendMail = true;
-            try {
-                System.out.println("Inside Done.....");
-
+            boolean canSendMail = true;
+            System.out.println("Inside Done.....");
+            if (!isError) {
                 LogUtility.writeToLog(jt_Execution_Logs, "Sending Mail...", true);
-//                jt_Execution_Logs.append("Sending Mail..." + "\n");
-//                jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
 
-                //Sending the Email
-                if (sendMail) {
-                    sendMail();
+                if (canSendMail) {
+                    try {
+                        sendMail();
+                    } catch (Exception ex) {
+                        LogUtility.writeToLog(jt_Execution_Logs, "Error while sending mail : " + ex.getMessage(), true);
+                        LogUtility.writeToLog(jt_Execution_Logs, "Email not sent", true);
+                        return;
+                    }
+                    LogUtility.writeToLog(jt_Execution_Logs, "Email sent", true);
                 }
 
-                LogUtility.writeToLog(jt_Execution_Logs, "Email sent ...", true);
-//                jt_Execution_Logs.append("Email sent ..." + "\n");
-
-                LogUtility.writeToLog(jt_Execution_Logs, "All test cases have been executed...", true);
-//                jt_Execution_Logs.append("All test cases have been executed..." + "\n");
-//                jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
-
-                System.out.println("ExecuteTestCases completed");
-            } catch (Exception ex) {
-                ex.printStackTrace();
+                LogUtility.writeToLog(jt_Execution_Logs, "All test cases have been executed", true);
+            }else{
+                LogUtility.writeToLog(jt_Execution_Logs, "Execution failed due to some error.", true);
             }
+
+            System.out.println("ExecuteTestCases completed");
+
         }
 
-        private void sendMail() {
-//            String toAddress = "mohit.anchan1893@gmail.com";
-//            //String toAddress = "abhisheksingh.itian@gmail.com";
-//            String subject = "This is a test Mail";
-//            String message = "Sucessfully sent email from the application";
-            
+        private void sendMail() throws AddressException, MessagingException, IOException {
             //Loading the Mail Template Saved by user
             XStreamUtil xUtil = new XStreamUtil();
             MailTemplate mailTemplate = (MailTemplate) xUtil.load_data_from_XML(Constants.MAIL_TEMPLATE_FILE);
@@ -700,24 +702,13 @@ public class MainWindow extends JFrame {
             File attachFile = null;
             attachFile = new File(gExcelPath);
 
-            try {
-                ConfigUtility configUtil = new ConfigUtility();
-                Properties smtpProperties = configUtil.loadProperties();
-                MailClient.sendEmail(smtpProperties, 
-                                        mailTemplate.getTo(), 
-                                        mailTemplate.getSubject(), 
-                                        mailTemplate.getBody(), 
-                                        attachFile);
-
-//                JOptionPane.showMessageDialog(this,
-//                        "The e-mail has been sent successfully!");
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-//                JOptionPane.showMessageDialog(this,
-//                        "Error while sending the e-mail: " + ex.getMessage(),
-//                        "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            ConfigUtility configUtil = new ConfigUtility();
+            Properties smtpProperties = configUtil.loadProperties();
+            MailClient.sendEmail(smtpProperties,
+                    mailTemplate.getTo(),
+                    mailTemplate.getSubject(),
+                    mailTemplate.getBody(),
+                    attachFile);
         }
     }
 
@@ -740,7 +731,6 @@ public class MainWindow extends JFrame {
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
                 String line;
-                jt_Execution_Logs.setText("");
 
                 while (true) {
                     line = br.readLine();
@@ -750,8 +740,6 @@ public class MainWindow extends JFrame {
                         LogUtility.writeToLog(jt_Execution_Logs, line, true);
                         System.out.println(line);
 
-//                        jt_Execution_Logs.append(line + "\n");
-//                        jt_Execution_Logs.update(jt_Execution_Logs.getGraphics());
                         if (line.indexOf("Ending") != -1) {
                             break;
                         }
