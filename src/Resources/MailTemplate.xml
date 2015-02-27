@@ -1,13 +1,6 @@
 <template>
-  <to>abc@gmail.com, bcd@gmail.com</to>
-  <cc>xCC@gmail.com 1</cc>
-  <subject>This is Subject 1</subject>
-  <body>This is the Body 1
-This is the Body 2 
-This is the Body 3
-
-Thanking You,
-			Yours Faithfully
-			Mohit Anchan
-</body>
+  <to>mohit.anchan1893@gmail.com,mymscproject.2015@gmail.com</to>
+  <cc>xCC@gmail.com</cc>
+  <subject>This is Subject </subject>
+  <body></body>
 </template>

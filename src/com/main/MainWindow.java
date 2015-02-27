@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.prefs.Preferences;
@@ -428,7 +429,7 @@ public class MainWindow extends JFrame {
             gTestCaseFolder = vTestCaseFolder;
 
             //setting values in labels
-            jt_ExcelPath_Val.setText(vExcelPath);
+            jt_ExcelPath_Val.setText(gExcelPath);
             jt_TestCaseFolder_Val.setText(gTestCaseFolder);
 
             //Function to populate the test cases from excel to Jtable
@@ -442,14 +443,18 @@ public class MainWindow extends JFrame {
     //Function to populate the test cases from excel to Jtable
     public void loadTestCases_inTable(String vExcelPath) {
         Workbook workbook = null;
-        try {
-            try {
-                File file = new File(vExcelPath);
-                workbook = Workbook.getWorkbook(file);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
 
+        try {
+            File file = new File(vExcelPath);
+            workbook = Workbook.getWorkbook(file);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (BiffException e) {
+            System.out.println("BiffException in function loadTestCases_inTable : " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        try {
             Sheet sheet = workbook.getSheet(0);
 
             if (table != null) {
@@ -475,9 +480,6 @@ public class MainWindow extends JFrame {
             }
             repaint();
 
-        } catch (BiffException e) {
-            System.out.println("BiffException in function loadTestCases_inTable : " + e.getMessage());
-            e.printStackTrace();
         } catch (Exception e) {
             System.out.println("Exception in function loadTestCases_inTable : " + e.getMessage());
             e.printStackTrace();
@@ -613,6 +615,9 @@ public class MainWindow extends JFrame {
 
         private ActionEvent mActionEvent;
         private boolean isError = false;
+        private StringBuffer selChkBox_Str;
+        private java.util.List<String> selTestCaseName_List;    //this will contain the list all the selected test case names
+        private java.util.List<String> selTestCaseHTML_List;    //this will contain the list all the HTML content
 
         public ExecuteTestCases(ActionEvent vActionEvent) {
             this.mActionEvent = vActionEvent;
@@ -621,8 +626,10 @@ public class MainWindow extends JFrame {
         @Override
         protected Boolean doInBackground() throws Exception {
             boolean result = false;
-            StringBuffer selChkBox_Str = new StringBuffer();
+            selChkBox_Str = new StringBuffer();
             int colNumIn_Excel = 0;
+            selTestCaseName_List = new ArrayList();
+            selTestCaseHTML_List = new ArrayList();
             try {
                 //get the parent Jframe Object
                 Component component = (Component) mActionEvent.getSource();
@@ -642,15 +649,16 @@ public class MainWindow extends JFrame {
                         if (selChkBox_Str.toString().equalsIgnoreCase("")) {
                             selChkBox_Str.append(colNumIn_Excel);
                         } else {
-                            selChkBox_Str.append("*" + colNumIn_Excel);
+                            selChkBox_Str.append("**" + colNumIn_Excel);
                         }
+
+                        //Store the selected test case names for mailing later on
+                        String testCaseName = (String) table.getValueAt(i, 1);
+                        selTestCaseName_List.add(testCaseName);
                     }
                 }
                 //path where the driver script is stored within the netbeans project
                 String driverScript_path = Constants.DRIVER_SCRIPT_PATH;
-
-                //System.out.println("selChkBox_Str = " + selChkBox_Str);
-                //System.out.println("script = "+"wscript " + driverScript_path + " " + gExcelPath + "  " + gTestCaseFolder + " " + selChkBox_Str.toString());
 
                 //execute the MasterScript vbs file
                 Process p = Runtime.getRuntime().exec("wscript " + driverScript_path + " " + gExcelPath + "  " + gTestCaseFolder + " " + selChkBox_Str.toString());
@@ -667,26 +675,44 @@ public class MainWindow extends JFrame {
             return result;
         }
 
+        //This function will be executed after all the Test cases has been executed
         @Override
         protected void done() {
-            boolean canSendMail = true;
+            boolean canSend_TCMail = true;           //get these settings from configurations
+            boolean canSend_SuiteMail = true;           //get these settings from configurations
             System.out.println("Inside Done.....");
-            if (!isError) {
-                LogUtility.writeToLog(jt_Execution_Logs, "Sending Mail...", true);
+            isError = false;            //remove this later on
 
-                if (canSendMail) {
+            if (!isError) {
+                //Loading the Mail Template Saved by user
+                XStreamUtil xUtil = new XStreamUtil();
+                MailTemplate mailTemplate = (MailTemplate) xUtil.load_data_from_XML(Constants.MAIL_TEMPLATE_FILE);
+
+                if (canSend_TCMail) {
                     try {
-                        sendMail();
+                        sendTCMail(mailTemplate);
                     } catch (Exception ex) {
                         LogUtility.writeToLog(jt_Execution_Logs, "Error while sending mail : " + ex.getMessage(), true);
                         LogUtility.writeToLog(jt_Execution_Logs, "Email not sent", true);
                         return;
                     }
-                    LogUtility.writeToLog(jt_Execution_Logs, "Email sent", true);
                 }
 
+                //Pending
+                if (canSend_SuiteMail) {
+                    try {
+                        //Sending mail for Test Suite (summary)---------------------------------------------------------------------------------
+                        sendSummaryMail(mailTemplate);
+                    } catch (Exception ex) {
+                        LogUtility.writeToLog(jt_Execution_Logs, "Error while sending summary mail : " + ex.getMessage(), true);
+                        LogUtility.writeToLog(jt_Execution_Logs, "Summary Email not sent", true);
+                        return;
+                    }
+                }
+                //---------------------------------------------------------------------------------
+
                 LogUtility.writeToLog(jt_Execution_Logs, "All test cases have been executed", true);
-            }else{
+            } else {
                 LogUtility.writeToLog(jt_Execution_Logs, "Execution failed due to some error.", true);
             }
 
@@ -694,20 +720,145 @@ public class MainWindow extends JFrame {
 
         }
 
-        private void sendMail() throws AddressException, MessagingException, IOException {
-            //Loading the Mail Template Saved by user
-            XStreamUtil xUtil = new XStreamUtil();
-            MailTemplate mailTemplate = (MailTemplate) xUtil.load_data_from_XML(Constants.MAIL_TEMPLATE_FILE);
+        private void sendTCMail(MailTemplate mailTemplate) throws Exception {
+            //Logic to load data for Sending individual Test case mail
+            //1. get total checked test cases
+            //2. loop through the test cases and select current test case
+            //3. load current test case result from the appropiate sheet in excel
+            //4. generate HTML based on the test case result
 
+            Workbook workbook = null;
+            LogUtility.writeToLog(jt_Execution_Logs, "Mailing Test Case Results", true);
+
+            if (selTestCaseName_List == null || selTestCaseName_List.size() <= 0) {
+                LogUtility.writeToLog(jt_Execution_Logs, "Error: Test Case list is empty", true);
+                return;
+            }
+
+            try {
+                File file = new File(gExcelPath);
+                workbook = Workbook.getWorkbook(file);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            } catch (BiffException e) {
+                System.out.println("BiffException in function loadTestCases_inTable : " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            //looping through all the selected test cases
+            for (int k = 0; k < selTestCaseName_List.size(); k++) {
+                String currTestCase = selTestCaseName_List.get(k);
+
+                //load the sheet by name as: TestCaseName = Sheet name in excel
+                Sheet sheet = workbook.getSheet(currTestCase);
+
+                //generate the HTML Table equivalent of the Excel data
+                String htmlStr = generateHTML_TestCases(sheet);
+
+                //maintain the html string of all test cases in a list
+                selTestCaseHTML_List.add(htmlStr);
+                System.out.println("htmlStr = " + htmlStr);
+            }
+            workbook.close();
+
+            for (int list = 0; list < selTestCaseHTML_List.size(); list++) {
+                sendMail(mailTemplate, selTestCaseHTML_List.get(list), false);
+            }
+        }
+
+        private void sendSummaryMail(MailTemplate mailTemplate) throws Exception {
+            String summaryHTML = "";
+
+            if (selTestCaseName_List == null || selTestCaseName_List.size() <= 0) {
+                LogUtility.writeToLog(jt_Execution_Logs, "Error: Test Case list is empty", true);
+                return;
+            }
+
+            summaryHTML = generateHTML_Summary(selTestCaseName_List);
+            System.out.println("summaryHTML = " + summaryHTML);
+
+            sendMail(mailTemplate, summaryHTML, true);
+        }
+
+        private String generateHTML_TestCases(Sheet vSheet) {
+            StringBuffer html = new StringBuffer();
+            Cell cell = null;
+            int tot_rows = vSheet.getRows();
+            int tot_cols = vSheet.getColumns();
+            String colHeader_css = "";
+            String row_css = "border:1px solid #ccc;padding-left:2px";
+            try {
+                html.append("<table style='width:70%;border:1px solid #ccc;border-collapse: collapse;' cellspacing=0 cellpadding=0>");
+                for (int row = 0; row < tot_rows; row++) {
+                    if(row==0){
+                        colHeader_css = ";font-weight:bold;text-align:center";
+                    }else{
+                        colHeader_css = "";
+                    }
+                    
+                    html.append("<tr>");
+                    for (int col = 0; col < tot_cols; col++) {
+                        html.append("<td style='"+ row_css + colHeader_css + "'>");
+                        cell = vSheet.getCell(col, row);
+                        html.append(cell.getContents());
+                        html.append("</td>");
+                    }
+                    html.append("</tr>");
+                }
+                html.append("</table>");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return html.toString();
+        }
+
+        private String generateHTML_Summary(java.util.List vSelTestCaseName_List) {
+            StringBuffer html = new StringBuffer();
+            int tot_rows = vSelTestCaseName_List.size();
+            int tot_cols = 3;
+            try {
+                String colHeader_css = "text-align:center;border:1px solid #ccc";
+                String row_css = "border:1px solid #ccc;padding-left:2px";
+                html.append("<table style='width:70%;border:1px solid #ccc;border-collapse: collapse;' cellspacing=0 cellpadding=0>");
+
+                //generating Columns
+                html.append("<tr style='font-weight:bold;border:1px solid #ccc'>");
+                html.append("<td style='"+colHeader_css+"'> Sr No </td>");
+                html.append("<td style='"+colHeader_css+"'> Test Case </td>");
+                html.append("<td style='"+colHeader_css+"'> Status </td>");
+                html.append("</tr>");
+
+                for (int row = 0; row < tot_rows; row++) {
+                    html.append("<tr>");
+                    html.append("<td style='"+row_css+"'>").append(row + 1).append("</td>");    //Sr No
+                    html.append("<td style='"+row_css+"'>").append(vSelTestCaseName_List.get(row)).append("</td>");     //test Case
+                    html.append("<td style='"+row_css+"'> </td>");     //test Case
+                    html.append("</tr>");
+                }
+                html.append("</table>");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return html.toString();
+        }
+
+        private void sendMail(MailTemplate mailTemplate, String vMailBody, boolean hasAttachment)
+                throws AddressException, MessagingException, IOException {
             File attachFile = null;
-            attachFile = new File(gExcelPath);
+
+            if (hasAttachment) {
+                attachFile = new File(gExcelPath);
+            }
 
             ConfigUtility configUtil = new ConfigUtility();
             Properties smtpProperties = configUtil.loadProperties();
+
             MailClient.sendEmail(smtpProperties,
                     mailTemplate.getTo(),
+                    mailTemplate.getCc(),
                     mailTemplate.getSubject(),
-                    mailTemplate.getBody(),
+                    vMailBody,
+                    hasAttachment,
                     attachFile);
         }
     }

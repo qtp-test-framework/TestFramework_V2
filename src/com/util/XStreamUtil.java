@@ -36,7 +36,6 @@ public class XStreamUtil {
             while ((sCurrentLine = br.readLine()) != null) {
                 xml_str.append(sCurrentLine);
             }
-            System.out.println("xml_str = " + xml_str);
             //XML to Object Conversion
             mailTemplate = (MailTemplate) xstream.fromXML(xml_str.toString());
 

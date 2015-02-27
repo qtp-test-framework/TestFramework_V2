@@ -337,7 +337,6 @@ public class MailSettings_Dlg extends JDialog {
 
             //Object to XML Conversion
             String xml_str = xstream.toXML(mailTemplate);
-            System.out.println(xml_str);
 
             //Load the XML file
             File to_xml_file = new File(Constants.MAIL_TEMPLATE_FILE);

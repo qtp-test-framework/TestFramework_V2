@@ -29,10 +29,7 @@ public class LoadExcelDts_Dlg extends JDialog {
         this.parent_Window = (MainWindow) parentFrame;
         this.user_prefs = main_prefs;
         
-        //API for persistent storage of user preferences
-//        user_prefs = Preferences.userNodeForPackage(LoadExcelDts_Dlg.class);
-        
-        //If user had selected a excel file/Test Case Folder earlier then load it by default (else set it as blank "")
+        //If user had selected a excel file/Test Case Folder earlier then load it by default 
         this.previous_ExcelPath = user_prefs.get(Constants.EXCEL_PREF, System.getProperty("user.home"));
         this.previous_TestCaseFolderPath = user_prefs.get(Constants.TEST_FOLDER_PREF, System.getProperty("user.home"));    
 
