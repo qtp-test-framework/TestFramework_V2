@@ -649,9 +649,9 @@ public class MainWindow extends JFrame {
                         if (selChkBox_Str.toString().equalsIgnoreCase("")) {
                             selChkBox_Str.append(colNumIn_Excel);
                         } else {
-                            selChkBox_Str.append("**" + colNumIn_Excel);
+                            selChkBox_Str.append("*" + colNumIn_Excel);
                         }
-
+                        
                         //Store the selected test case names for mailing later on
                         String testCaseName = (String) table.getValueAt(i, 1);
                         selTestCaseName_List.add(testCaseName);
