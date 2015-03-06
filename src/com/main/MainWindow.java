@@ -651,7 +651,7 @@ public class MainWindow extends JFrame {
                         } else {
                             selChkBox_Str.append("*" + colNumIn_Excel);
                         }
-                        
+
                         //Store the selected test case names for mailing later on
                         String testCaseName = (String) table.getValueAt(i, 1);
                         selTestCaseName_List.add(testCaseName);
@@ -669,6 +669,10 @@ public class MainWindow extends JFrame {
                 if (p.exitValue() != 0) {
                     isError = true;
                 }
+
+                //Send Email : Logic====================================================
+                loadResults_SendMail();
+                
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -678,9 +682,12 @@ public class MainWindow extends JFrame {
         //This function will be executed after all the Test cases has been executed
         @Override
         protected void done() {
+            System.out.println("inside done...");
+        }
+
+        public void loadResults_SendMail() {
             boolean canSend_TCMail = true;           //get these settings from configurations
             boolean canSend_SuiteMail = true;           //get these settings from configurations
-            System.out.println("Inside Done.....");
             isError = false;            //remove this later on
 
             if (!isError) {
@@ -698,7 +705,6 @@ public class MainWindow extends JFrame {
                     }
                 }
 
-                //Pending
                 if (canSend_SuiteMail) {
                     try {
                         //Sending mail for Test Suite (summary)---------------------------------------------------------------------------------
@@ -717,7 +723,6 @@ public class MainWindow extends JFrame {
             }
 
             System.out.println("ExecuteTestCases completed");
-
         }
 
         private void sendTCMail(MailTemplate mailTemplate) throws Exception {
@@ -753,11 +758,11 @@ public class MainWindow extends JFrame {
                 Sheet sheet = workbook.getSheet(currTestCase);
 
                 //generate the HTML Table equivalent of the Excel data
-                String htmlStr = generateHTML_TestCases(sheet);
+                String htmlStr = generateHTML_TestCases(sheet, selTestCaseName_List.get(k));
 
                 //maintain the html string of all test cases in a list
                 selTestCaseHTML_List.add(htmlStr);
-                System.out.println("htmlStr = " + htmlStr);
+                //System.out.println("htmlStr = " + htmlStr);
             }
             workbook.close();
 
@@ -775,31 +780,45 @@ public class MainWindow extends JFrame {
             }
 
             summaryHTML = generateHTML_Summary(selTestCaseName_List);
-            System.out.println("summaryHTML = " + summaryHTML);
+            //System.out.println("summaryHTML = " + summaryHTML);
 
             sendMail(mailTemplate, summaryHTML, true);
         }
 
-        private String generateHTML_TestCases(Sheet vSheet) {
+        private String generateHTML_TestCases(Sheet vSheet, String vTestCaseName) {
             StringBuffer html = new StringBuffer();
             Cell cell = null;
             int tot_rows = vSheet.getRows();
             int tot_cols = vSheet.getColumns();
             String colHeader_css = "";
-            String row_css = "border:1px solid #ccc;padding-left:2px";
+            String row_css = "border:1px solid #ccc;padding-left:2px;";
             try {
+                html.append("<span style='font-weight:bold'>Dear Sir, </span><br/>");
+                html.append("<span style='margin-left:25px;'>Following are the results of Test case : </span>");
+                html.append("<span style='font-weight:bold;'>").append(vTestCaseName).append("</span>");
+                html.append("<br/><br/><br/>");
+
                 html.append("<table style='width:70%;border:1px solid #ccc;border-collapse: collapse;' cellspacing=0 cellpadding=0>");
                 for (int row = 0; row < tot_rows; row++) {
-                    if(row==0){
-                        colHeader_css = ";font-weight:bold;text-align:center";
-                    }else{
+                    if (row == 0) {
+                        colHeader_css = ";font-weight:bold;text-align:center;background:#B8B8B8";
+                    } else {
                         colHeader_css = "";
                     }
-                    
+
                     html.append("<tr>");
                     for (int col = 0; col < tot_cols; col++) {
-                        html.append("<td style='"+ row_css + colHeader_css + "'>");
+                        String bgColor = "";
                         cell = vSheet.getCell(col, row);
+
+                        //Red background for Pass ; Green Bg for failed test cases
+                        if (cell.getContents().equalsIgnoreCase("Fail")) {
+                            bgColor = "background: #FF8566";
+                        } else if (cell.getContents().equalsIgnoreCase("Pass")) {
+                            bgColor = "background: #66FF66";
+                        }
+
+                        html.append("<td style='").append(row_css).append(bgColor).append(colHeader_css).append("'>");
                         html.append(cell.getContents());
                         html.append("</td>");
                     }
@@ -817,22 +836,29 @@ public class MainWindow extends JFrame {
             int tot_rows = vSelTestCaseName_List.size();
             int tot_cols = 3;
             try {
-                String colHeader_css = "text-align:center;border:1px solid #ccc";
-                String row_css = "border:1px solid #ccc;padding-left:2px";
+                String colHeader_css = "text-align:center;border:1px solid #ccc;background:#B8B8B8;padding:2px;";
+                String row_css = "border:1px solid #ccc;padding:2px;";
+
+                html.append("<span style='font-weight:bold'>Dear Sir, </span><br/>");
+                html.append("<span style='margin-left:25px;'>Following are the Summary Results of all Test cases: </span>");
+                html.append("<br/><br/><br/>");
+
                 html.append("<table style='width:70%;border:1px solid #ccc;border-collapse: collapse;' cellspacing=0 cellpadding=0>");
 
                 //generating Columns
                 html.append("<tr style='font-weight:bold;border:1px solid #ccc'>");
-                html.append("<td style='"+colHeader_css+"'> Sr No </td>");
-                html.append("<td style='"+colHeader_css+"'> Test Case </td>");
-                html.append("<td style='"+colHeader_css+"'> Status </td>");
+                html.append("<td style='width:8%;" + colHeader_css + "'> Sr No </td>");
+                html.append("<td style='" + colHeader_css + "'> Test Case </td>");
+                html.append("<td style='width:15%;" + colHeader_css + "'> No. of Passes</td>");
+                html.append("<td style='width:15%;" + colHeader_css + "'> No. of Fails </td>");
                 html.append("</tr>");
 
                 for (int row = 0; row < tot_rows; row++) {
                     html.append("<tr>");
-                    html.append("<td style='"+row_css+"'>").append(row + 1).append("</td>");    //Sr No
-                    html.append("<td style='"+row_css+"'>").append(vSelTestCaseName_List.get(row)).append("</td>");     //test Case
-                    html.append("<td style='"+row_css+"'> </td>");     //test Case
+                    html.append("<td style='" + row_css + "'>").append(row + 1).append("</td>");    //Sr No
+                    html.append("<td style='" + row_css + "'>").append(vSelTestCaseName_List.get(row)).append("</td>");     //test Case
+                    html.append("<td style='" + row_css + "'>2</td>");     //No. of Passes
+                    html.append("<td style='" + row_css + "'>0</td>");     //No. of Fails
                     html.append("</tr>");
                 }
                 html.append("</table>");
