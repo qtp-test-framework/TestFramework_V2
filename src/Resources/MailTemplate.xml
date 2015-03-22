@@ -1,6 +1,5 @@
 <template>
   <to>mohit.anchan1893@gmail.com,mymscproject.2015@gmail.com</to>
-  <cc>xCC@gmail.com</cc>
-  <subject>This is Subject </subject>
-  <body></body>
+  <cc>xCC1@gmail.com</cc>
+  <subject>This is the Subject a  a</subject>
 </template>

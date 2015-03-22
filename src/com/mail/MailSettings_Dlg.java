@@ -12,6 +12,9 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.Properties;
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.Document;
 
 public class MailSettings_Dlg extends JDialog {
 
@@ -34,9 +37,9 @@ public class MailSettings_Dlg extends JDialog {
     private JLabel lbl_Subject;
     private JLabel lbl_CC;
     private JTextField jt_To;
-    private JTextField jt_Subject;
+    private JTextArea jt_Subject;
     private JTextField jt_CC;
-    private JTextArea textArea_Message;
+    //private JTextArea textArea_Message;
     //buttons panel components
     private static JButton btn_Apply;
     private static JButton btn_Ok;
@@ -51,13 +54,14 @@ public class MailSettings_Dlg extends JDialog {
         int hGap = 0, vGap = 5;
         this.setLayout(new BorderLayout(hGap, vGap));
 
+        createUI_Buttons();
+        
         createUI_SMTP();
         load_SMTP_Data();
 
         createUI_MailTemp();
         load_Template_Data();
 
-        createUI_Buttons();
         createUI(parent_Window, this);
     }
 
@@ -81,8 +85,9 @@ public class MailSettings_Dlg extends JDialog {
         constraints.weightx = 10;
         constraints.weighty = 0;
         constraints.insets = new Insets(30, 10, 5, 10);
+//        jt_Host.getDocument().addDocumentListener(new TextChangeListener(btn_Apply));
         tab_SMTP.add(jt_Host, constraints);
-
+        
         lbl_Port = new JLabel("Port number: ");
         constraints.gridx = 0;
         constraints.gridy = 1;
@@ -97,8 +102,9 @@ public class MailSettings_Dlg extends JDialog {
         constraints.weightx = 1;
         constraints.weighty = 0;
         constraints.insets = new Insets(10, 10, 5, 10);
+//        jt_Port.getDocument().addDocumentListener(new TextChangeListener(btn_Apply));
         tab_SMTP.add(jt_Port, constraints);
-
+        
         lbl_User = new JLabel("Username: ");
         constraints.gridx = 0;
         constraints.gridy = 2;
@@ -113,6 +119,7 @@ public class MailSettings_Dlg extends JDialog {
         constraints.weightx = 1;
         constraints.weighty = 0;
         constraints.insets = new Insets(10, 10, 5, 10);
+//        jt_User.getDocument().addDocumentListener(new TextChangeListener(btn_Apply));
         tab_SMTP.add(jt_User, constraints);
 
         lbl_Pass = new JLabel("Password: ");
@@ -129,6 +136,7 @@ public class MailSettings_Dlg extends JDialog {
         constraints.weightx = 1;
         constraints.weighty = 1;
         constraints.insets = new Insets(10, 10, 5, 10);
+//        jt_Pass.getDocument().addDocumentListener(new TextChangeListener(btn_Apply));
         tab_SMTP.add(jt_Pass, constraints);
 
     }
@@ -136,52 +144,75 @@ public class MailSettings_Dlg extends JDialog {
     public void createUI_MailTemp() {
         tab_MailTemp = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(10, 10, 5, 10);
-        constraints.anchor = GridBagConstraints.WEST;
+        constraints.anchor = GridBagConstraints.NORTHWEST;
 
         lbl_To = new JLabel("To: ");
         constraints.gridx = 0;
         constraints.gridy = 0;
+        constraints.weightx = 1;
+        constraints.weighty = 0;
+        constraints.insets = new Insets(30, 10, 5, 10);
         tab_MailTemp.add(lbl_To, constraints);
 
         jt_To = new JTextField(30);
         constraints.gridx = 1;
         constraints.gridy = 0;
+        constraints.weightx = 10;
+        constraints.weighty = 0;
         constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = new Insets(30, 10, 5, 10);
         tab_MailTemp.add(jt_To, constraints);
 
         lbl_CC = new JLabel("CC: ");
         constraints.gridx = 0;
         constraints.gridy = 1;
+        constraints.weightx = 1;
+        constraints.weighty = 0;
+        constraints.insets = new Insets(10, 10, 5, 10);
         tab_MailTemp.add(lbl_CC, constraints);
 
         jt_CC = new JTextField(30);
         constraints.gridx = 1;
         constraints.gridy = 1;
+        constraints.weightx = 1;
+        constraints.weighty = 0;
         constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = new Insets(10, 10, 5, 10);
+//        jt_CC.getDocument().addDocumentListener(new TextChangeListener(btn_Apply));
         tab_MailTemp.add(jt_CC, constraints);
 
         lbl_Subject = new JLabel("Subject: ");
         constraints.gridx = 0;
         constraints.gridy = 2;
+        constraints.weightx = 1;
+        constraints.weighty = 0;
+        constraints.insets = new Insets(10, 10, 5, 10);
         tab_MailTemp.add(lbl_Subject, constraints);
 
-        jt_Subject = new JTextField(30);
+        jt_Subject = new JTextArea(3, 30);
+        jt_Subject.setLineWrap(true);    // If text doesn't fit on a line, jump to the next
+        jt_Subject.setWrapStyleWord(true);   // Makes sure that words stay intact if a line wrap occurs
+        JScrollPane scrollbar_Body = new JScrollPane(jt_Subject, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         constraints.gridx = 1;
         constraints.gridy = 2;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
         constraints.fill = GridBagConstraints.HORIZONTAL;
-        tab_MailTemp.add(jt_Subject, constraints);
-
-        textArea_Message = new JTextArea(7, 30);
-        textArea_Message.setLineWrap(true);    // If text doesn't fit on a line, jump to the next
-        textArea_Message.setWrapStyleWord(true);   // Makes sure that words stay intact if a line wrap occurs
-        JScrollPane scrollbar_Body = new JScrollPane(textArea_Message, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        constraints.gridx = 1;
-        constraints.gridy = 4;
-        constraints.weightx = 1.0;
-        constraints.weighty = 1.0;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = new Insets(10, 10, 5, 10);
+        jt_Subject.getDocument().addDocumentListener(new TextChangeListener(btn_Apply));
         tab_MailTemp.add(scrollbar_Body, constraints);
+
+        //MA: Commented the Mail Body
+//        textArea_Message = new JTextArea(7, 30);
+//        textArea_Message.setLineWrap(true);    // If text doesn't fit on a line, jump to the next
+//        textArea_Message.setWrapStyleWord(true);   // Makes sure that words stay intact if a line wrap occurs
+//        JScrollPane scrollbar_Body = new JScrollPane(textArea_Message, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+//        constraints.gridx = 1;
+//        constraints.gridy = 4;
+//        constraints.weightx = 1.0;
+//        constraints.weighty = 1.0;
+//        constraints.fill = GridBagConstraints.HORIZONTAL;
+//        tab_MailTemp.add(scrollbar_Body, constraints);
 
         //tool tip msg to user
         JLabel lbl_TO_Msg = new JLabel(Constants.MAIL_TOOL_TIP);
@@ -192,7 +223,7 @@ public class MailSettings_Dlg extends JDialog {
         constraints.gridy = 0;
         constraints.weightx = 0;
         constraints.weighty = 0;
-        constraints.insets = new Insets(39, 10, 0, 10);
+        constraints.insets = new Insets(49, 10, 0, 10);
         tab_MailTemp.add(lbl_TO_Msg, constraints);
     }
 
@@ -200,6 +231,7 @@ public class MailSettings_Dlg extends JDialog {
         panel_BtnPanel = new JPanel(new FlowLayout());
 
         btn_Apply = new JButton("Apply");
+        btn_Apply.setEnabled(false);
         panel_BtnPanel.add(btn_Apply);
 
         btn_Ok = new JButton("Ok");
@@ -332,8 +364,7 @@ public class MailSettings_Dlg extends JDialog {
 
             MailTemplate mailTemplate = new MailTemplate(jt_To.getText(),
                     jt_CC.getText(),
-                    jt_Subject.getText(),
-                    textArea_Message.getText());
+                    jt_Subject.getText());
 
             //Object to XML Conversion
             String xml_str = xstream.toXML(mailTemplate);
@@ -360,11 +391,11 @@ public class MailSettings_Dlg extends JDialog {
         try {
             XStreamUtil xUtil = new XStreamUtil();
             MailTemplate mailTemplate = (MailTemplate) xUtil.load_data_from_XML(Constants.MAIL_TEMPLATE_FILE);
-            
+
             jt_To.setText(mailTemplate.getTo());
             jt_CC.setText(mailTemplate.getCc());
             jt_Subject.setText(mailTemplate.getSubject());
-            textArea_Message.setText(mailTemplate.getBody());
+//            textArea_Message.setText(mailTemplate.getBody());
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -398,5 +429,43 @@ public class MailSettings_Dlg extends JDialog {
                 disposeForm();
             }
         }
+    }
+}
+
+//Custom listener to check if context of any of the textfield/textarea has been changed by user
+//and then accordingly enable/disable the "Apply" button
+class TextChangeListener implements DocumentListener {
+    private static JButton btn_Apply_temp;
+    
+    public TextChangeListener(JButton vBtn_Apply){
+        btn_Apply_temp = (JButton) vBtn_Apply;
+    }
+
+    //inserted into
+    public void insertUpdate(DocumentEvent e) {
+        handleTextChange(e);
+    }
+
+    //removed from
+    public void removeUpdate(DocumentEvent e) {
+        handleTextChange(e);
+    }
+
+    public void changedUpdate(DocumentEvent e) {
+        //Plain text components don't fire these events.
+    }
+
+    public void handleTextChange(DocumentEvent e) {
+        System.out.println("Inside ......");
+        Document doc = (Document) e.getDocument();
+        
+        if(btn_Apply_temp == null){
+            System.out.println("it is null");
+        }
+        //disable the "Apply" button if text has been changed
+        if(btn_Apply_temp!=null && !btn_Apply_temp.isEnabled()){
+            btn_Apply_temp.setEnabled(true);
+        }
+        System.out.println("after.....");
     }
 }

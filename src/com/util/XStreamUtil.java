@@ -14,7 +14,7 @@ public class XStreamUtil {
         StringBuffer xml_str;
         MailTemplate mailTemplate = null;
         try {
-            mailTemplate = new MailTemplate("", "", "", "");
+            mailTemplate = new MailTemplate("", "", "");
             
             //Load the XML file
             File xml_file = new File(filePath);

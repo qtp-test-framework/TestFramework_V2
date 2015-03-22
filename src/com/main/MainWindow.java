@@ -57,7 +57,7 @@ public class MainWindow extends JFrame {
         super(title);
         this.main_frame = (MainWindow) this;
 
-        loadData();
+        loadUserPrefData();
         addFileMenu(this);
         addComponentsToPane(this.getContentPane());
         addComponent_Listeners();
@@ -141,7 +141,7 @@ public class MainWindow extends JFrame {
         }
     }
 
-    public void loadData() {
+    public void loadUserPrefData() {
         //API for persistent storage of user preferences
         user_prefs = Preferences.userNodeForPackage(MainWindow.class);
 
@@ -790,8 +790,9 @@ public class MainWindow extends JFrame {
             Cell cell = null;
             int tot_rows = vSheet.getRows();
             int tot_cols = vSheet.getColumns();
-            String colHeader_css = "";
-            String row_css = "border:1px solid #ccc;padding-left:2px;";
+            String colHeader_css = ";font-weight:bold;text-align:center;background:#B8B8B8";
+            String row_css = "border:1px solid #ccc;padding:4px;";
+            String css = "";
             try {
                 html.append("<span style='font-weight:bold'>Dear Sir, </span><br/>");
                 html.append("<span style='margin-left:25px;'>Following are the results of Test case : </span>");
@@ -799,11 +800,18 @@ public class MainWindow extends JFrame {
                 html.append("<br/><br/><br/>");
 
                 html.append("<table style='width:70%;border:1px solid #ccc;border-collapse: collapse;' cellspacing=0 cellpadding=0>");
+                
+                //first header row
+                html.append("<tr>");
+                html.append("<td style='"+row_css+colHeader_css+"' colspan="+(tot_cols-1)+">Test Data Used</td>");
+                html.append("<td style='"+colHeader_css+"'>Results</td>");
+                html.append("</tr>");
+                
                 for (int row = 0; row < tot_rows; row++) {
                     if (row == 0) {
-                        colHeader_css = ";font-weight:bold;text-align:center;background:#B8B8B8";
+                        css = colHeader_css;
                     } else {
-                        colHeader_css = "";
+                        css = "";
                     }
 
                     html.append("<tr>");
@@ -818,7 +826,7 @@ public class MainWindow extends JFrame {
                             bgColor = "background: #66FF66";
                         }
 
-                        html.append("<td style='").append(row_css).append(bgColor).append(colHeader_css).append("'>");
+                        html.append("<td style='").append(row_css).append(bgColor).append(css).append("'>");
                         html.append(cell.getContents());
                         html.append("</td>");
                     }
@@ -836,8 +844,8 @@ public class MainWindow extends JFrame {
             int tot_rows = vSelTestCaseName_List.size();
             int tot_cols = 3;
             try {
-                String colHeader_css = "text-align:center;border:1px solid #ccc;background:#B8B8B8;padding:2px;";
-                String row_css = "border:1px solid #ccc;padding:2px;";
+                String colHeader_css = "text-align:center;border:1px solid #ccc;background:#B8B8B8;padding:4px;";
+                String row_css = "border:1px solid #ccc;padding:4px;";
 
                 html.append("<span style='font-weight:bold'>Dear Sir, </span><br/>");
                 html.append("<span style='margin-left:25px;'>Following are the Summary Results of all Test cases: </span>");
@@ -858,7 +866,7 @@ public class MainWindow extends JFrame {
                     html.append("<td style='" + row_css + "'>").append(row + 1).append("</td>");    //Sr No
                     html.append("<td style='" + row_css + "'>").append(vSelTestCaseName_List.get(row)).append("</td>");     //test Case
                     html.append("<td style='" + row_css + "'>2</td>");     //No. of Passes
-                    html.append("<td style='" + row_css + "'>0</td>");     //No. of Fails
+                    html.append("<td style='" + row_css + "'>2</td>");     //No. of Fails
                     html.append("</tr>");
                 }
                 html.append("</table>");
