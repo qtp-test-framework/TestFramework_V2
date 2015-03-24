@@ -8,6 +8,7 @@ package com.main;
 
 import com.mail.MailSettings_Dlg;
 import com.pojo.MailTemplate;
+import com.pojo.TestCase;
 import com.util.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -22,10 +23,14 @@ import javax.mail.internet.AddressException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableColumn;
-import jxl.Cell;
-import jxl.Sheet;
-import jxl.Workbook;
-import jxl.read.biff.BiffException;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class MainWindow extends JFrame {
 
@@ -52,6 +57,7 @@ public class MainWindow extends JFrame {
     static String gTestCaseFolder = "";
     public JFrame main_frame;
     Preferences user_prefs;
+    java.util.List<TestCase> testCaseSumm_list = null;  //this will hold the list of testCases with their pass/fail data
 
     public MainWindow(String title) {
         super(title);
@@ -443,19 +449,10 @@ public class MainWindow extends JFrame {
     //Function to populate the test cases from excel to Jtable
     public void loadTestCases_inTable(String vExcelPath) {
         Workbook workbook = null;
-
         try {
-            File file = new File(vExcelPath);
-            workbook = Workbook.getWorkbook(file);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } catch (BiffException e) {
-            System.out.println("BiffException in function loadTestCases_inTable : " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        try {
-            Sheet sheet = workbook.getSheet(0);
+            //Sheet sheet = workbook.getSheetAt(0);
+            System.out.println("Constants.IS_XLSX = "+Constants.IS_XLSX);
+            Sheet sheet = ExcelUtility.getExcelSheet_ByPosition(workbook, vExcelPath, Constants.IS_XLSX, 0);
 
             if (table != null) {
                 data.clear();
@@ -468,18 +465,25 @@ public class MainWindow extends JFrame {
                         model.removeRow(i);
                     }
                 }
+                Row row = null;
+                Cell cell = null;
 
                 //Adding new rows to Table
-                for (int j = 1; j < sheet.getRows(); j++) {
+                for (int j = 1; j < sheet.getPhysicalNumberOfRows(); j++) {
                     Vector d = new Vector();
-                    Cell cell = sheet.getCell(0, j);
+
+                    row = ExcelUtility.getExcelRow_BySheet(sheet, Constants.IS_XLSX, j);
+                    cell = row.getCell((short) 0);
                     d.add(new Boolean(false));
-                    d.add(cell.getContents());
+                    d.add(cell.getStringCellValue());
                     model.addRow(d);
                 }
             }
             repaint();
 
+            if (workbook != null) {
+                workbook.close();
+            }
         } catch (Exception e) {
             System.out.println("Exception in function loadTestCases_inTable : " + e.getMessage());
             e.printStackTrace();
@@ -672,7 +676,7 @@ public class MainWindow extends JFrame {
 
                 //Send Email : Logic====================================================
                 loadResults_SendMail();
-                
+
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -685,7 +689,80 @@ public class MainWindow extends JFrame {
             System.out.println("inside done...");
         }
 
-        public void loadResults_SendMail() {
+        public void generateSummaryResult() throws Exception {
+            //1. get the list of checked Test cases
+            //2. start a loop and load current test case excel sheet
+            //3. In the sheet, get last column and chk if its name is Test_Results
+            //4. if yes then count passes & fails in that column
+            //5. if no then just put zero or - in pass/fail
+            //6. Finally write the pass/fail count in the main sheet
+            Workbook workbook = null;
+            Row row_batch = null;
+            Row curr_row = null;
+
+            Sheet batch_sheet = ExcelUtility.getExcelSheet_ByPosition(workbook, gExcelPath, Constants.IS_XLSX, 0);
+
+            //write the headers in batch sheet for no. of pass/fail test cases
+            row_batch = ExcelUtility.getExcelRow_BySheet(batch_sheet, Constants.IS_XLSX, 0);
+            Cell cell_batch = row_batch.getCell((short) 0);
+
+            testCaseSumm_list = new ArrayList<TestCase>();
+            System.out.println("selTestCaseName_List.size() = " + selTestCaseName_List.size());
+            for (int i = 0; i < selTestCaseName_List.size(); i++) {
+                int fail_count = 0;
+                int pass_count = 0;
+                String currTestCase = selTestCaseName_List.get(i);
+
+                //load the sheet by name as: TestCaseName = Sheet name in excel
+                Sheet sheet = ExcelUtility.getExcelSheet_ByName(workbook, gExcelPath, Constants.IS_XLSX, currTestCase);
+                int tot_rows = ExcelUtility.getTotalRows(sheet);
+                int tot_cols = ExcelUtility.getTotalColumns(sheet);
+                //if there are 4 cols in a sheet then position of last column is 3
+                int testResultsCol_Pos = tot_cols - 1;
+
+                //Check if the last column is the results column
+                curr_row = ExcelUtility.getExcelRow_BySheet(sheet, Constants.IS_XLSX, 0);
+                System.out.println("curr_row.getLastCellNum() = "+curr_row.getLastCellNum());
+                
+                Cell cell = null;
+                Cell cell_hdr = curr_row.getCell((short) testResultsCol_Pos);
+                
+                //Cell cell_hdr = sheet.getCell(tot_cols, 0);
+
+                //--
+                
+                //Examine from here... cell_hdr is being set as null     
+                if (cell_hdr == null) {
+                    System.out.println("cell_hdr is null================");
+                } else {
+                    System.out.println("cell_hdr = " + cell_hdr.getStringCellValue());
+                }
+                if (cell_hdr != null && cell_hdr.getStringCellValue().trim().equalsIgnoreCase("Test_Results")) {
+
+                    //loop through all the rows
+                    for (int row = 1; row < tot_rows; row++) {
+                        curr_row = ExcelUtility.getExcelRow_BySheet(sheet, Constants.IS_XLSX, row);
+                        cell = curr_row.getCell((short) testResultsCol_Pos);
+                        //Cell cell = sheet.getCell(tot_cols, row);
+
+                        if (cell.getStringCellValue().equalsIgnoreCase("Fail")) {
+                            fail_count++;
+                        } else if (cell.getStringCellValue().equalsIgnoreCase("Pass")) {
+                            pass_count++;
+                        }
+                    }
+                }
+                //now write the results in the main batch sheet
+                TestCase ts = new TestCase(currTestCase, pass_count, fail_count);
+                testCaseSumm_list.add(ts);
+            }
+
+            if (workbook != null) {
+                workbook.close();
+            }
+        }
+
+        public void loadResults_SendMail() throws Exception {
             boolean canSend_TCMail = true;           //get these settings from configurations
             boolean canSend_SuiteMail = true;           //get these settings from configurations
             isError = false;            //remove this later on
@@ -707,6 +784,7 @@ public class MainWindow extends JFrame {
 
                 if (canSend_SuiteMail) {
                     try {
+                        generateSummaryResult();
                         //Sending mail for Test Suite (summary)---------------------------------------------------------------------------------
                         sendSummaryMail(mailTemplate);
                     } catch (Exception ex) {
@@ -732,7 +810,6 @@ public class MainWindow extends JFrame {
             //3. load current test case result from the appropiate sheet in excel
             //4. generate HTML based on the test case result
 
-            Workbook workbook = null;
             LogUtility.writeToLog(jt_Execution_Logs, "Mailing Test Case Results", true);
 
             if (selTestCaseName_List == null || selTestCaseName_List.size() <= 0) {
@@ -740,14 +817,11 @@ public class MainWindow extends JFrame {
                 return;
             }
 
+            Workbook workbook = null;
             try {
-                File file = new File(gExcelPath);
-                workbook = Workbook.getWorkbook(file);
+                workbook = ExcelUtility.loadExcel_Workbook(gExcelPath, Constants.IS_XLSX);
             } catch (IOException ex) {
                 ex.printStackTrace();
-            } catch (BiffException e) {
-                System.out.println("BiffException in function loadTestCases_inTable : " + e.getMessage());
-                e.printStackTrace();
             }
 
             //looping through all the selected test cases
@@ -774,12 +848,12 @@ public class MainWindow extends JFrame {
         private void sendSummaryMail(MailTemplate mailTemplate) throws Exception {
             String summaryHTML = "";
 
-            if (selTestCaseName_List == null || selTestCaseName_List.size() <= 0) {
+            if (testCaseSumm_list == null || testCaseSumm_list.size() <= 0) {
                 LogUtility.writeToLog(jt_Execution_Logs, "Error: Test Case list is empty", true);
                 return;
             }
 
-            summaryHTML = generateHTML_Summary(selTestCaseName_List);
+            summaryHTML = generateHTML_Summary(testCaseSumm_list);
             //System.out.println("summaryHTML = " + summaryHTML);
 
             sendMail(mailTemplate, summaryHTML, true);
@@ -788,25 +862,29 @@ public class MainWindow extends JFrame {
         private String generateHTML_TestCases(Sheet vSheet, String vTestCaseName) {
             StringBuffer html = new StringBuffer();
             Cell cell = null;
-            int tot_rows = vSheet.getRows();
-            int tot_cols = vSheet.getColumns();
             String colHeader_css = ";font-weight:bold;text-align:center;background:#B8B8B8";
             String row_css = "border:1px solid #ccc;padding:4px;";
             String css = "";
+            int tot_rows = 0;
+            int tot_cols = 0;
+            Row curr_row = null;
             try {
+                tot_rows = ExcelUtility.getTotalRows(vSheet);
+                tot_cols = ExcelUtility.getTotalColumns(vSheet);
+
                 html.append("<span style='font-weight:bold'>Dear Sir, </span><br/>");
                 html.append("<span style='margin-left:25px;'>Following are the results of Test case : </span>");
                 html.append("<span style='font-weight:bold;'>").append(vTestCaseName).append("</span>");
                 html.append("<br/><br/><br/>");
 
                 html.append("<table style='width:70%;border:1px solid #ccc;border-collapse: collapse;' cellspacing=0 cellpadding=0>");
-                
+
                 //first header row
                 html.append("<tr>");
-                html.append("<td style='"+row_css+colHeader_css+"' colspan="+(tot_cols-1)+">Test Data Used</td>");
-                html.append("<td style='"+colHeader_css+"'>Results</td>");
+                html.append("<td style='" + row_css + colHeader_css + "' colspan=" + (tot_cols - 1) + ">Test Data Used</td>");
+                html.append("<td style='" + colHeader_css + "'>Results</td>");
                 html.append("</tr>");
-                
+
                 for (int row = 0; row < tot_rows; row++) {
                     if (row == 0) {
                         css = colHeader_css;
@@ -817,17 +895,22 @@ public class MainWindow extends JFrame {
                     html.append("<tr>");
                     for (int col = 0; col < tot_cols; col++) {
                         String bgColor = "";
-                        cell = vSheet.getCell(col, row);
+                        curr_row = ExcelUtility.getExcelRow_BySheet(vSheet, Constants.IS_XLSX, row);
+                        cell = curr_row.getCell(col);
+                        //cell = vSheet.getCell(col, row);
 
-                        //Red background for Pass ; Green Bg for failed test cases
-                        if (cell.getContents().equalsIgnoreCase("Fail")) {
-                            bgColor = "background: #FF8566";
-                        } else if (cell.getContents().equalsIgnoreCase("Pass")) {
-                            bgColor = "background: #66FF66";
+
+                        if (col == (tot_cols - 1)) {
+                            //Red background for Pass ; Green Bg for failed test cases
+                            if (cell.getStringCellValue().equalsIgnoreCase("Fail")) {
+                                bgColor = "background: #FF8566";
+                            } else if (cell.getStringCellValue().equalsIgnoreCase("Pass")) {
+                                bgColor = "background: #66FF66";
+                            }
                         }
 
                         html.append("<td style='").append(row_css).append(bgColor).append(css).append("'>");
-                        html.append(cell.getContents());
+                        html.append(ExcelUtility.getCellValue_Str(cell));
                         html.append("</td>");
                     }
                     html.append("</tr>");
@@ -839,10 +922,12 @@ public class MainWindow extends JFrame {
             return html.toString();
         }
 
-        private String generateHTML_Summary(java.util.List vSelTestCaseName_List) {
+        private String generateHTML_Summary(java.util.List vTestCaseSumm_list) {
             StringBuffer html = new StringBuffer();
-            int tot_rows = vSelTestCaseName_List.size();
+            int tot_rows = vTestCaseSumm_list.size();
+            System.out.println("tot_rows = " + tot_rows);
             int tot_cols = 3;
+            TestCase testCaseObj = null;
             try {
                 String colHeader_css = "text-align:center;border:1px solid #ccc;background:#B8B8B8;padding:4px;";
                 String row_css = "border:1px solid #ccc;padding:4px;";
@@ -861,12 +946,13 @@ public class MainWindow extends JFrame {
                 html.append("<td style='width:15%;" + colHeader_css + "'> No. of Fails </td>");
                 html.append("</tr>");
 
-                for (int row = 0; row < tot_rows; row++) {
+                for (int k = 0; k < tot_rows; k++) {
+                    testCaseObj = (TestCase) vTestCaseSumm_list.get(k);
                     html.append("<tr>");
-                    html.append("<td style='" + row_css + "'>").append(row + 1).append("</td>");    //Sr No
-                    html.append("<td style='" + row_css + "'>").append(vSelTestCaseName_List.get(row)).append("</td>");     //test Case
-                    html.append("<td style='" + row_css + "'>2</td>");     //No. of Passes
-                    html.append("<td style='" + row_css + "'>2</td>");     //No. of Fails
+                    html.append("<td style='" + row_css + "'>").append(k + 1).append("</td>");    //Sr No
+                    html.append("<td style='" + row_css + "'>").append(testCaseObj.getTestCaseName()).append("</td>");     //test Case
+                    html.append("<td style='" + row_css + "'>" + testCaseObj.getNo_of_pass() + "</td>");     //No. of Passes
+                    html.append("<td style='" + row_css + "'>" + testCaseObj.getNo_of_fail() + "</td>");     //No. of Fails
                     html.append("</tr>");
                 }
                 html.append("</table>");

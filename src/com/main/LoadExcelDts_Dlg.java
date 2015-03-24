@@ -28,10 +28,10 @@ public class LoadExcelDts_Dlg extends JDialog {
         super(parentFrame, title, true);
         this.parent_Window = (MainWindow) parentFrame;
         this.user_prefs = main_prefs;
-        
+
         //If user had selected a excel file/Test Case Folder earlier then load it by default 
         this.previous_ExcelPath = user_prefs.get(Constants.EXCEL_PREF, System.getProperty("user.home"));
-        this.previous_TestCaseFolderPath = user_prefs.get(Constants.TEST_FOLDER_PREF, System.getProperty("user.home"));    
+        this.previous_TestCaseFolderPath = user_prefs.get(Constants.TEST_FOLDER_PREF, System.getProperty("user.home"));
 
         //set window location relative to its parent window
         if (parentFrame != null) {
@@ -102,7 +102,7 @@ public class LoadExcelDts_Dlg extends JDialog {
         btn_CloseWindow.addActionListener(new CustomButtonListener());
 
         getContentPane().add(panel, BorderLayout.NORTH);
-        
+
         this.setSize(500, 200);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.pack();
@@ -127,12 +127,12 @@ public class LoadExcelDts_Dlg extends JDialog {
             int result = jExcelPathChooser.showOpenDialog(this);
             if (result == JFileChooser.APPROVE_OPTION) {
                 File file = jExcelPathChooser.getSelectedFile();
-                if (!file.getName().endsWith("xls")) {
-                    JOptionPane.showMessageDialog(null, "Please select only Excel file.", "Error", JOptionPane.ERROR_MESSAGE);
-                } else {
-//                    previous_ExcelPath = file.getPath();
+                if (file.getName().endsWith("xls") || file.getName().endsWith("xlsx")) {
                     txt_ExcelPath.setText(file.getPath());
                     user_prefs.put(Constants.EXCEL_PREF, file.getPath());
+
+                } else {
+                    JOptionPane.showMessageDialog(null, "Please select only Excel file.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 System.out.println("Cancel button clicked");
@@ -174,6 +174,13 @@ public class LoadExcelDts_Dlg extends JDialog {
                 return;
             }
 
+            //Setting the Global XLSX Constant variable
+            if (GetFileExtension(excelPath).equalsIgnoreCase("xlsx")) {
+                Constants.IS_XLSX = true;
+            }else{
+                Constants.IS_XLSX = false;
+            }
+
             //replacing all spaces in the path with '$$', as spaces cause problems while passing to vbscript file
             excelPath = excelPath.replace(" ", "$$");
             testCaseFolder = testCaseFolder.replace(" ", "$$");
@@ -184,7 +191,7 @@ public class LoadExcelDts_Dlg extends JDialog {
 
             //Close current Frame after saving..
             dispose();
-            
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -223,6 +230,14 @@ public class LoadExcelDts_Dlg extends JDialog {
             ex.printStackTrace();
         }
         return true;
+    }
+
+    private static String GetFileExtension(String fname2) throws Exception{
+        String fileName = fname2;
+        String ext = "";
+        int mid = fileName.lastIndexOf(".");
+        ext = fileName.substring(mid + 1, fileName.length());
+        return ext;
     }
 
     public class CustomButtonListener implements ActionListener {

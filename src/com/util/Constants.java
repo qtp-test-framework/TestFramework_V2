@@ -21,4 +21,6 @@ public class Constants {
     //key to be used for persistent preferences
     public static final String EXCEL_PREF = "excel_path";
     public static final String TEST_FOLDER_PREF = "test_folder";
+    
+    public static boolean IS_XLSX = false;
 }
