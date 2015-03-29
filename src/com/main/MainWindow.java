@@ -21,22 +21,20 @@ import java.util.prefs.Preferences;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
 import javax.swing.table.TableColumn;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class MainWindow extends JFrame {
 
     // Variables declaration - do not modify                     
-    private static JButton btn_Load;
-    private static JButton btn_Execute;
+    //private static JButton btn_Load;
+    //private static JButton btn_Execute;
     private static JLabel lbl_ExcelPath;
     private static JLabel lbl_TestCaseFolder;
     private static JTextField jt_ExcelPath_Val;
@@ -49,6 +47,11 @@ public class MainWindow extends JFrame {
     private static JMenuItem jSubMenu_Import;
     private static JMenuItem jSubMenu_Exit;
     private static JMenuItem jSubMenu_MailSttngs;
+    private static JMenuItem jSubMenu_Execute;
+    //Toolbar buttons
+    private static JButton btn_import_excel_TB;
+    private static JButton btn_execute_TB;
+    private static JButton btn_mail_sttngs_TB;
     // End of variables declaration
     static CustomTableModel model = null;
     static Vector headers = new Vector();
@@ -62,8 +65,10 @@ public class MainWindow extends JFrame {
     public MainWindow(String title) {
         super(title);
         this.main_frame = (MainWindow) this;
+        this.setLayout(new BorderLayout());
 
         loadUserPrefData();
+        addToolBar(this);
         addFileMenu(this);
         addComponentsToPane(this.getContentPane());
         addComponent_Listeners();
@@ -109,35 +114,100 @@ public class MainWindow extends JFrame {
             }
         });
     }
+    
+    public void loadUserPrefData() {
+        //API for persistent storage of user preferences
+        user_prefs = Preferences.userNodeForPackage(MainWindow.class);
+
+        gExcelPath = user_prefs.get(Constants.EXCEL_PREF, "");
+        gTestCaseFolder = user_prefs.get(Constants.TEST_FOLDER_PREF, "");
+    }
+
+    private void addToolBar(JFrame this_frame) {
+        try {
+            Insets margins = new Insets(0, 5, 0, 5);    //give spacing between buttons
+            
+            ImageIcon img_import_excel = new ImageIcon("src/Resources/Images/import_excel_24.png");
+            btn_import_excel_TB = new JButton(img_import_excel);
+            btn_import_excel_TB.setToolTipText("Import Test Cases from Excel");
+            btn_import_excel_TB.addActionListener(new CustomButtonListener());
+            btn_import_excel_TB.setMargin(margins);
+            
+            ImageIcon img_execute = new ImageIcon("src/Resources/Images/execute_24.png");
+            btn_execute_TB = new JButton(img_execute);
+            btn_execute_TB.setToolTipText("Execute the test cases");
+            btn_execute_TB.addActionListener(new CustomButtonListener());
+            btn_execute_TB.setMargin(margins);
+            
+            ImageIcon img_mail_sttngs = new ImageIcon("src/Resources/Images/mail_settings_dark_24.png"); //#1F7A3E 
+            btn_mail_sttngs_TB = new JButton(img_mail_sttngs);
+            btn_mail_sttngs_TB.setToolTipText("Mail Settings");
+            btn_mail_sttngs_TB.addActionListener(new CustomButtonListener());
+            btn_mail_sttngs_TB.setMargin(margins);
+
+            JToolBar tool_bar = new JToolBar();
+            tool_bar.setFloatable(false);       //to make a tool bar immovable.
+            tool_bar.setRollover(true);      //to visually indicate tool bar buttons when the user passes over them with the cursor.
+            tool_bar.setBorder(new EtchedBorder());
+            //tool_bar.setBorder(new BevelBorder(BevelBorder.RAISED));
+
+            tool_bar.add(btn_import_excel_TB);
+            tool_bar.addSeparator();
+            tool_bar.add(btn_execute_TB);
+            tool_bar.addSeparator();
+            tool_bar.add(btn_mail_sttngs_TB);
+            tool_bar.addSeparator();
+            
+            this_frame.add(tool_bar, BorderLayout.NORTH);
+        } catch (Exception ex) {
+            ex.printStackTrace();;
+        }
+    }
 
     private static void addFileMenu(JFrame frame) {
         try {
             JMenuBar menubar = new JMenuBar();
             frame.setJMenuBar(menubar);
 
-            // File Menu
+            // File Menu------------------------------------------------------------------
             JMenu file = new JMenu("File");
             file.setMnemonic('F');
             menubar.add(file);
 
             // File Sub Menus
             jSubMenu_Import = new JMenuItem("Import excel");
+            ImageIcon img_import_excel = new ImageIcon("src/Resources/Images/import_excel_16.png");
+            jSubMenu_Import.setIcon(img_import_excel);
             file.add(jSubMenu_Import);
 
             jSubMenu_Exit = new JMenuItem("Exit");
             file.add(jSubMenu_Exit);
 
-            //Settings Menu
+            //Settings Menu------------------------------------------------------------------
             JMenu setting = new JMenu("Settings");
             setting.setMnemonic('S');
             menubar.add(setting);
 
             //Settings Sub Menu
             jSubMenu_MailSttngs = new JMenuItem("Mail Settings");
+            ImageIcon img_mail_sttngs = new ImageIcon("src/Resources/Images/mail_settings_16.png");
+            jSubMenu_MailSttngs.setIcon(img_mail_sttngs);
             jSubMenu_MailSttngs.setMnemonic('M');
             setting.add(jSubMenu_MailSttngs);
+            
+            //Run Menu------------------------------------------------------------------
+            JMenu run = new JMenu("Run");
+            run.setMnemonic('R');
+            menubar.add(run);
+            
+            //Run Sub Menu
+            jSubMenu_Execute = new JMenuItem("Execute");
+            ImageIcon img_execute_16 = new ImageIcon("src/Resources/Images/execute_16.png");
+            jSubMenu_Execute.setIcon(img_execute_16);
+            jSubMenu_Execute.setMnemonic('E');
+            run.add(jSubMenu_Execute);
 
-            // Help Menu
+            // Help Menu------------------------------------------------------------------
             JMenu help = new JMenu("Help");
             help.setMnemonic('H');
             menubar.add(help);
@@ -145,14 +215,6 @@ public class MainWindow extends JFrame {
         } catch (Exception ex) {
             ex.printStackTrace();;
         }
-    }
-
-    public void loadUserPrefData() {
-        //API for persistent storage of user preferences
-        user_prefs = Preferences.userNodeForPackage(MainWindow.class);
-
-        gExcelPath = user_prefs.get(Constants.EXCEL_PREF, "");
-        gTestCaseFolder = user_prefs.get(Constants.TEST_FOLDER_PREF, "");
     }
 
     public static void addComponentsToPane(Container pane) {
@@ -171,47 +233,40 @@ public class MainWindow extends JFrame {
 
             gbConst.gridy = 0;
             gbConst.gridx = 0;
-            gbConst.gridheight = 3;
+            gbConst.gridheight = 5;
             gbConst.gridwidth = 2;
-            gbConst.insets = new Insets(10, 10, 0, 0);
+            gbConst.insets = new Insets(0, 5, 0, 0);
             gbConst.weightx = 50;
-            gbConst.weighty = 50;
-            gbConst.anchor = GridBagConstraints.WEST;
-
-            //addComp(JPanel thePanel, JComponent comp, int xPos, int yPos, int compWidth, int compHeight, int place, int stretch)
-            //addComp(jPanel, jScrollPane1, 0, 0, 3, 5, GridBagConstraints.WEST, GridBagConstraints.NONE);
+            gbConst.weighty = 5;
+            gbConst.anchor = GridBagConstraints.NORTHWEST;
             jPanel.add(jScrollPane1, gbConst);
 
             //Load Button
-            btn_Load = new JButton("LOAD");
-            gbConst.gridx = 0;
-            gbConst.gridy = 5;
-            gbConst.gridheight = 1;
-            gbConst.gridwidth = 1;
-            //gbConst.insets = new Insets(0, 35, 0, 0);
-            gbConst.insets = new Insets(0, 10, 0, 0);
-            gbConst.weightx = 0;
-            gbConst.weighty = 0;
-            gbConst.ipady = 5;
-            gbConst.ipadx = 50;
-            gbConst.anchor = GridBagConstraints.WEST;
-            jPanel.add(btn_Load, gbConst);
-            //addComp(jPanel, btn_Load, 0, 5, 1, 1, GridBagConstraints.WEST, GridBagConstraints.NONE);
+//            btn_Load = new JButton("LOAD");
+//            gbConst.gridx = 0;
+//            gbConst.gridy = 0;
+//            gbConst.gridheight = 1;
+//            gbConst.gridwidth = 1;
+//            gbConst.insets = new Insets(0, 10, 0, 0);
+//            gbConst.weightx = 0;
+//            gbConst.weighty = 0;
+//            gbConst.ipady = 5;
+//            gbConst.ipadx = 50;
+//            gbConst.anchor = GridBagConstraints.WEST;
+//            jPanel.add(btn_Load, gbConst);
 
             //Execute Button
-            btn_Execute = new JButton("EXECUTE");
-            gbConst.gridx = 0;
-            gbConst.gridy = 5;
-            gbConst.gridheight = 1;
-            gbConst.gridwidth = 1;
-            //gbConst.insets = new Insets(0, 120, 0, 0);
-            gbConst.insets = new Insets(0, 120, 0, 0);
-            gbConst.weightx = 0;
-            gbConst.weighty = 0;
-            gbConst.ipadx = 50;
-            gbConst.anchor = GridBagConstraints.EAST;
-            //addComp(jPanel, btn_Execute, 1, 5, 1, 1, GridBagConstraints.WEST, GridBagConstraints.NONE);
-            jPanel.add(btn_Execute, gbConst);
+//            btn_Execute = new JButton("EXECUTE");
+//            gbConst.gridx = 0;
+//            gbConst.gridy = 0;
+//            gbConst.gridheight = 1;
+//            gbConst.gridwidth = 1;
+//            gbConst.insets = new Insets(0, 120, 0, 0);
+//            gbConst.weightx = 0;
+//            gbConst.weighty = 0;
+//            gbConst.ipadx = 50;
+//            gbConst.anchor = GridBagConstraints.EAST;
+//            jPanel.add(btn_Execute, gbConst);
 
 
             //ExcelPath Lbl
@@ -222,20 +277,19 @@ public class MainWindow extends JFrame {
             gbConst.gridwidth = 1;
             gbConst.weightx = 0;
             gbConst.weighty = 0;
-            gbConst.insets = new Insets(40, 20, 0, 0);
+            gbConst.insets = new Insets(10, 20, 0, 0);
             gbConst.weightx = 0;
             gbConst.weighty = 0;
             gbConst.ipadx = 0;
             gbConst.anchor = GridBagConstraints.WEST;
-            //addComp(jPanel, lbl_ExcelPath, 3, 0, 1, 1, GridBagConstraints.EAST, GridBagConstraints.NONE);
             jPanel.add(lbl_ExcelPath, gbConst);
 
             //ExcelPath Value
             jt_ExcelPath_Val = new JTextField();     //36
-            jt_ExcelPath_Val.setPreferredSize(new Dimension(280, 10));
-            jt_ExcelPath_Val.setMaximumSize(new Dimension(280, 10));
-            jt_ExcelPath_Val.setMinimumSize(new Dimension(280, 10));
-            jt_ExcelPath_Val.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
+            jt_ExcelPath_Val.setPreferredSize(new Dimension(380, 15));
+            jt_ExcelPath_Val.setMaximumSize(new Dimension(380, 15));
+            jt_ExcelPath_Val.setMinimumSize(new Dimension(380, 15));
+            jt_ExcelPath_Val.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 0, Color.BLACK));
             jt_ExcelPath_Val.setEditable(false);
             gbConst.gridx = 3;
             gbConst.gridy = 0;
@@ -243,11 +297,10 @@ public class MainWindow extends JFrame {
             gbConst.gridwidth = 1;
             gbConst.weightx = 0;
             gbConst.weighty = 0;
-            gbConst.insets = new Insets(40, 0, 0, 0);
+            gbConst.insets = new Insets(10, 0, 0, 0);
             gbConst.weightx = 150;
             gbConst.weighty = 0;
             gbConst.anchor = GridBagConstraints.WEST;
-            //addComp(jPanel, lbl_ExcelPath, 3, 0, 1, 1, GridBagConstraints.EAST, GridBagConstraints.NONE);
             jPanel.add(jt_ExcelPath_Val, gbConst);
             jt_ExcelPath_Val.setText(gExcelPath);    //"D:\\Mohit\\QTP\\QTP_Excel\\QTP_Excel\\QTP_Excel\\Batch.xls
 
@@ -259,7 +312,7 @@ public class MainWindow extends JFrame {
             gbConst.gridwidth = 1;
             gbConst.weightx = 1;
             gbConst.weighty = 1;
-            gbConst.insets = new Insets(20, 20, 0, 0);
+            gbConst.insets = new Insets(15, 20, 0, 0);
             gbConst.weightx = 0;
             gbConst.weighty = 0;
             gbConst.anchor = GridBagConstraints.WEST;
@@ -267,10 +320,10 @@ public class MainWindow extends JFrame {
 
             //Test Case Folder Value
             jt_TestCaseFolder_Val = new JTextField();            //C:\\Program Files\\HP\\Unified Functional Testing\\QTP\\QTP_OUTPUT_DIR\\
-            jt_TestCaseFolder_Val.setPreferredSize(new Dimension(280, 10));
-            jt_TestCaseFolder_Val.setMaximumSize(new Dimension(280, 10));
-            jt_TestCaseFolder_Val.setMinimumSize(new Dimension(280, 10));
-            jt_TestCaseFolder_Val.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
+            jt_TestCaseFolder_Val.setPreferredSize(new Dimension(380, 15));
+            jt_TestCaseFolder_Val.setMaximumSize(new Dimension(380, 15));
+            jt_TestCaseFolder_Val.setMinimumSize(new Dimension(380, 15));
+            jt_TestCaseFolder_Val.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 0, Color.BLACK));
             jt_TestCaseFolder_Val.setEditable(false);
             jt_TestCaseFolder_Val.setText(gTestCaseFolder);
             gbConst.gridx = 3;
@@ -279,7 +332,7 @@ public class MainWindow extends JFrame {
             gbConst.gridwidth = 1;
             gbConst.weightx = 1;
             gbConst.weighty = 1;
-            gbConst.insets = new Insets(20, 0, 0, 0);
+            gbConst.insets = new Insets(15, 0, 0, 0);
             gbConst.weightx = 0;
             gbConst.weighty = 0;
             gbConst.anchor = GridBagConstraints.WEST;
@@ -287,44 +340,46 @@ public class MainWindow extends JFrame {
 
             //Logs Label
             lbl_Logs = new JLabel("Logs : ");
-            gbConst.gridx = 0;
-            gbConst.gridy = 6;
+            gbConst.gridx = 2;
+            gbConst.gridy = 2;
             gbConst.gridheight = 1;
             gbConst.gridwidth = 1;
-            gbConst.weightx = 0;
+            gbConst.weightx = 50;
             gbConst.weighty = 0;
-            gbConst.insets = new Insets(15, 15, 0, 0);
+            gbConst.insets = new Insets(20, 20, 0, 0);
             gbConst.weightx = 0;
             gbConst.weighty = 0;
             gbConst.anchor = GridBagConstraints.WEST;
             jPanel.add(lbl_Logs, gbConst);
 
             //Logs Text Field
-            jt_Execution_Logs = new JTextArea(4, 5);
-            //jt_Execution_Logs.setPreferredSize(new Dimension(104, 76));
-            jt_Execution_Logs.setMaximumSize(new Dimension(104, 76));
-            jt_Execution_Logs.setMinimumSize(new Dimension(104, 76));
+            jt_Execution_Logs = new JTextArea();//10, 15
+            int w = 500;
+            int h = 299;
+            jt_Execution_Logs.setPreferredSize(new Dimension(w, h));
+            jt_Execution_Logs.setMaximumSize(new Dimension(w, h));
+            jt_Execution_Logs.setMinimumSize(new Dimension(w, h));
             jt_Execution_Logs.setText("");
             jt_Execution_Logs.setLineWrap(true);    // If text doesn't fit on a line, jump to the next
             jt_Execution_Logs.setWrapStyleWord(true);   // Makes sure that words stay intact if a line wrap occurs
             jt_Execution_Logs.setEditable(false);
 
-            gbConst.gridx = 0;
-            gbConst.gridy = 7;
-            gbConst.gridheight = 0;
+            gbConst.gridx = 2;
+            gbConst.gridy = 3;
+            gbConst.gridheight = 5;
             gbConst.gridwidth = 0;
-            gbConst.insets = new Insets(3, 10, 8, 0);
-            gbConst.anchor = GridBagConstraints.WEST;
-            gbConst.fill = GridBagConstraints.HORIZONTAL;
+            gbConst.insets = new Insets(3, 20, 0, 0);
+            gbConst.anchor = GridBagConstraints.NORTHWEST;
+            //gbConst.fill = GridBagConstraints.HORIZONTAL;
             JScrollPane scrollbar_Log = new JScrollPane(jt_Execution_Logs, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-            scrollbar_Log.setPreferredSize(jt_Execution_Logs.getPreferredSize());
-            scrollbar_Log.setMaximumSize(jt_Execution_Logs.getPreferredSize());
-            scrollbar_Log.setMinimumSize(jt_Execution_Logs.getPreferredSize());
+            scrollbar_Log.setPreferredSize(new Dimension(w, h+5));
+            scrollbar_Log.setMaximumSize(new Dimension(w, h+5));
+            scrollbar_Log.setMinimumSize(new Dimension(w, h+5));
             jPanel.add(scrollbar_Log, gbConst);
 
             //used to padding for components from the panel's edges
             jPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-            pane.add(jPanel);
+            pane.add(jPanel, BorderLayout.CENTER);
         } catch (Exception ex) {
             ex.printStackTrace();;
         }
@@ -334,11 +389,13 @@ public class MainWindow extends JFrame {
         try {
             //Menu Components
             jSubMenu_Exit.addActionListener(new CustomButtonListener());
+            jSubMenu_Import.addActionListener(new CustomButtonListener());
             jSubMenu_MailSttngs.addActionListener(new CustomButtonListener());
+            jSubMenu_Execute.addActionListener(new CustomButtonListener());
 
             //Frame Components
-            btn_Load.addActionListener(new CustomButtonListener());
-            btn_Execute.addActionListener(new CustomButtonListener());
+//            btn_Load.addActionListener(new CustomButtonListener());
+//            btn_Execute.addActionListener(new CustomButtonListener());
         } catch (Exception ex) {
             ex.printStackTrace();;
         }
@@ -350,12 +407,6 @@ public class MainWindow extends JFrame {
             headers.clear();
             headers.add(new Boolean(false));
             headers.add("Test Cases");
-            //remove this later on
-//            data.clear();
-//            Vector d = new Vector();
-//            d.add(new Boolean(false));
-//            d.add("LoadFromExcel 1");
-//            data.add(d);
 
             model = new CustomTableModel(data, headers);
 
@@ -370,8 +421,8 @@ public class MainWindow extends JFrame {
             //the table uses the entire height of the container, even if the table doesn't have enough rows to use the whole vertical space
             table.setFillsViewportHeight(true);
 
-            int tableWidth = model.getColumnCount() * 150; //not in use
-            int tableHeight = model.getRowCount() * 25; //not in use
+//            int tableWidth = model.getColumnCount() * 150; //not in use
+//            int tableHeight = model.getRowCount() * 25; //not in use
 
             //table.setPreferredSize(new Dimension(Constants.TABLE_WIDTH, Constants.TABLE_HEIGHT));
             table.setPreferredScrollableViewportSize(new Dimension(Constants.TABLE_WIDTH, Constants.TABLE_HEIGHT));
@@ -381,24 +432,6 @@ public class MainWindow extends JFrame {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-    private void addComp(JPanel thePanel, JComponent comp, int xPos, int yPos, int compWidth, int compHeight, int place, int stretch) {
-
-        GridBagConstraints gridConstraints = new GridBagConstraints();
-
-        gridConstraints.gridx = xPos;
-        gridConstraints.gridy = yPos;
-        gridConstraints.gridwidth = compWidth;
-        gridConstraints.gridheight = compHeight;
-        gridConstraints.weightx = 100;
-        gridConstraints.weighty = 100;
-        gridConstraints.insets = new Insets(5, 5, 5, 5);
-        gridConstraints.anchor = place;
-        gridConstraints.fill = stretch;
-
-        thePanel.add(comp, gridConstraints);
-
     }
 
     //Finction to set properties of the JTable column header
@@ -451,7 +484,7 @@ public class MainWindow extends JFrame {
         Workbook workbook = null;
         try {
             //Sheet sheet = workbook.getSheetAt(0);
-            System.out.println("Constants.IS_XLSX = "+Constants.IS_XLSX);
+            System.out.println("Constants.IS_XLSX = " + Constants.IS_XLSX);
             Sheet sheet = ExcelUtility.getExcelSheet_ByPosition(workbook, vExcelPath, Constants.IS_XLSX, 0);
 
             if (table != null) {
@@ -492,10 +525,10 @@ public class MainWindow extends JFrame {
 
     public void load_ButtonClick(ActionEvent ae) {
         try {
-            Component component = (Component) ae.getSource();
-            JFrame mainFrame = (JFrame) SwingUtilities.getRoot(component);
+            //Component component = (Component) ae.getSource();
+            //JFrame mainFrame = (JFrame) SwingUtilities.getRoot(component);
 
-            new LoadExcelDts_Dlg(mainFrame, "Excel Import Details", user_prefs);
+            new LoadExcelDts_Dlg(main_frame, "Excel Import Details", user_prefs);
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -565,7 +598,7 @@ public class MainWindow extends JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Please import the Test Cases excel file first by clicking the Load button!",
                         "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
-                btn_Load.requestFocus();
+                btn_import_excel_TB.requestFocus();
                 return false;
             }
 
@@ -574,7 +607,7 @@ public class MainWindow extends JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Please select the Test Cases folder!",
                         "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
-                btn_Load.requestFocus();
+                btn_import_excel_TB.requestFocus();
                 return false;
             }
 
@@ -583,7 +616,7 @@ public class MainWindow extends JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Please select atleast one test case from the list!",
                         "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
-                btn_Load.requestFocus();
+                btn_import_excel_TB.requestFocus();
                 return false;
             }
 
@@ -722,15 +755,15 @@ public class MainWindow extends JFrame {
 
                 //Check if the last column is the results column
                 curr_row = ExcelUtility.getExcelRow_BySheet(sheet, Constants.IS_XLSX, 0);
-                System.out.println("curr_row.getLastCellNum() = "+curr_row.getLastCellNum());
-                
+                System.out.println("curr_row.getLastCellNum() = " + curr_row.getLastCellNum());
+
                 Cell cell = null;
                 Cell cell_hdr = curr_row.getCell((short) testResultsCol_Pos);
-                
+
                 //Cell cell_hdr = sheet.getCell(tot_cols, 0);
 
                 //--
-                
+
                 //Examine from here... cell_hdr is being set as null     
                 if (cell_hdr == null) {
                     System.out.println("cell_hdr is null================");
@@ -1041,13 +1074,13 @@ public class MainWindow extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
-            if (ae.getSource() == btn_Load) {
+            if (ae.getSource() == btn_import_excel_TB || ae.getSource() == jSubMenu_Import) {
                 load_ButtonClick(ae);
-            } else if (ae.getSource() == btn_Execute) {
+            } else if (ae.getSource() == btn_execute_TB || ae.getSource() == jSubMenu_Execute) {
                 execute_ButtonClick(ae);
             } else if (ae.getSource() == jSubMenu_Exit) {
                 exit_MenuClick(ae);
-            } else if (ae.getSource() == jSubMenu_MailSttngs) {
+            } else if (ae.getSource() == jSubMenu_MailSttngs || ae.getSource() == btn_mail_sttngs_TB) {
                 mail_MenuClick(ae);
             }
         }
