@@ -6,7 +6,7 @@ import java.awt.event.ItemListener;
 import javax.swing.AbstractButton;
 import javax.swing.JTable;
 
-
+//Class for Selection of Check Boxes in Mainwindow
 public class CustomItemListener implements ItemListener {
     private JTable table;
     

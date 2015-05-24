@@ -6,6 +6,7 @@
  */
 package com.main;
 
+import com.help.About_Dlg;
 import com.mail.MailSettings_Dlg;
 import com.pojo.MailTemplate;
 import com.pojo.TestCase;
@@ -48,6 +49,8 @@ public class MainWindow extends JFrame {
     private static JMenuItem jSubMenu_Exit;
     private static JMenuItem jSubMenu_MailSttngs;
     private static JMenuItem jSubMenu_Execute;
+    private static JMenuItem jSubMenu_Run_FStep;
+    private static JMenuItem jSubMenu_About;
     //Toolbar buttons
     private static JButton btn_import_excel_TB;
     private static JButton btn_execute_TB;
@@ -206,11 +209,21 @@ public class MainWindow extends JFrame {
             jSubMenu_Execute.setIcon(img_execute_16);
             jSubMenu_Execute.setMnemonic('E');
             run.add(jSubMenu_Execute);
+            
+            //Run from failed step Menu
+//            jSubMenu_Run_FStep = new JMenuItem("Run from failed step");
+//            jSubMenu_Run_FStep.setMnemonic('F');
+//            run.add(jSubMenu_Run_FStep);
 
             // Help Menu------------------------------------------------------------------
             JMenu help = new JMenu("Help");
             help.setMnemonic('H');
             menubar.add(help);
+            
+            //About
+            jSubMenu_About = new JMenuItem("About");
+            jSubMenu_About.setMnemonic('A');
+            help.add(jSubMenu_About);
 
         } catch (Exception ex) {
             ex.printStackTrace();;
@@ -392,6 +405,7 @@ public class MainWindow extends JFrame {
             jSubMenu_Import.addActionListener(new CustomButtonListener());
             jSubMenu_MailSttngs.addActionListener(new CustomButtonListener());
             jSubMenu_Execute.addActionListener(new CustomButtonListener());
+            jSubMenu_About.addActionListener(new CustomButtonListener());
 
             //Frame Components
 //            btn_Load.addActionListener(new CustomButtonListener());
@@ -553,6 +567,7 @@ public class MainWindow extends JFrame {
             if (log_file.exists()) {
                 //deleting the existing log file
                 if (!log_file.delete()) {
+                    LogUtility.writeToLog(jt_Execution_Logs, "Unable to delete the previous log file", true);
                     System.out.println("Delete Operation Failed...");
                 }
             }
@@ -560,6 +575,7 @@ public class MainWindow extends JFrame {
             log_file = new File(Constants.Execution_Log_Path);
 
             if (!log_file.createNewFile()) {
+                LogUtility.writeToLog(jt_Execution_Logs, "Unable to create the log file", true);
                 System.out.println("File not created....");
             }
             log_file = null;
@@ -576,6 +592,25 @@ public class MainWindow extends JFrame {
             SwingWorker<Boolean, Void> displayLogs = new DisplayLogs(ae);
             displayLogs.execute();
             //===================================================================================================
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void runFromFStep_ButtonClick(ActionEvent ae) {
+        try {
+            //open excel and look for the first fail first case
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    
+    public void displayAboutDialog() {
+        try {
+            new About_Dlg(main_frame, "About");
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -1078,11 +1113,15 @@ public class MainWindow extends JFrame {
                 load_ButtonClick(ae);
             } else if (ae.getSource() == btn_execute_TB || ae.getSource() == jSubMenu_Execute) {
                 execute_ButtonClick(ae);
+            } else if (ae.getSource() == jSubMenu_Run_FStep) {
+                runFromFStep_ButtonClick(ae);
             } else if (ae.getSource() == jSubMenu_Exit) {
                 exit_MenuClick(ae);
             } else if (ae.getSource() == jSubMenu_MailSttngs || ae.getSource() == btn_mail_sttngs_TB) {
                 mail_MenuClick(ae);
-            }
+            } else if (ae.getSource() == jSubMenu_About) {
+                displayAboutDialog();
+            } 
         }
     }
 }

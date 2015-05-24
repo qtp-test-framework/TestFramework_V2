@@ -3,6 +3,7 @@ package com.util;
 
 
 public class Constants {
+    public static final String APPLICATION_NAME = "AM Automation Framework";
     public static final String DRIVER_SCRIPT_PATH = "src/Resources/DriverScript.vbs";
     
     public static final int TABLE_WIDTH = 220;
@@ -23,4 +24,6 @@ public class Constants {
     public static final String TEST_FOLDER_PREF = "test_folder";
     
     public static boolean IS_XLSX = false;
+    
+    public static final String LOGO_ABOUT = "src/Resources/Images/Logo_About.png";
 }
