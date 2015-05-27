@@ -55,6 +55,7 @@ public class MainWindow extends JFrame {
     private static JButton btn_import_excel_TB;
     private static JButton btn_execute_TB;
     private static JButton btn_mail_sttngs_TB;
+    private static JButton btn_clearData_TB;
     // End of variables declaration
     static CustomTableModel model = null;
     static Vector headers = new Vector();
@@ -64,6 +65,7 @@ public class MainWindow extends JFrame {
     public JFrame main_frame;
     Preferences user_prefs;
     java.util.List<TestCase> testCaseSumm_list = null;  //this will hold the list of testCases with their pass/fail data
+    static JProgressBar progressBar;
 
     public MainWindow(String title) {
         super(title);
@@ -113,11 +115,11 @@ public class MainWindow extends JFrame {
         EventQueue.invokeLater(new Runnable() {
 
             public void run() {
-                new MainWindow("QTP Automation Framework");
+                new MainWindow(Constants.APPLICATION_NAME);
             }
         });
     }
-    
+
     public void loadUserPrefData() {
         //API for persistent storage of user preferences
         user_prefs = Preferences.userNodeForPackage(MainWindow.class);
@@ -129,24 +131,30 @@ public class MainWindow extends JFrame {
     private void addToolBar(JFrame this_frame) {
         try {
             Insets margins = new Insets(0, 5, 0, 5);    //give spacing between buttons
-            
+
             ImageIcon img_import_excel = new ImageIcon("src/Resources/Images/import_excel_24.png");
             btn_import_excel_TB = new JButton(img_import_excel);
             btn_import_excel_TB.setToolTipText("Import Test Cases from Excel");
             btn_import_excel_TB.addActionListener(new CustomButtonListener());
             btn_import_excel_TB.setMargin(margins);
-            
+
             ImageIcon img_execute = new ImageIcon("src/Resources/Images/execute_24.png");
             btn_execute_TB = new JButton(img_execute);
             btn_execute_TB.setToolTipText("Execute the test cases");
             btn_execute_TB.addActionListener(new CustomButtonListener());
             btn_execute_TB.setMargin(margins);
-            
+
             ImageIcon img_mail_sttngs = new ImageIcon("src/Resources/Images/mail_settings_dark_24.png"); //#1F7A3E 
             btn_mail_sttngs_TB = new JButton(img_mail_sttngs);
             btn_mail_sttngs_TB.setToolTipText("Mail Settings");
             btn_mail_sttngs_TB.addActionListener(new CustomButtonListener());
             btn_mail_sttngs_TB.setMargin(margins);
+
+            ImageIcon img_clear = new ImageIcon("src/Resources/Images/btn_clearData_TB.png");   //#5BBB66
+            btn_clearData_TB = new JButton(img_clear);
+            btn_clearData_TB.setToolTipText("Clear All Data");
+            btn_clearData_TB.addActionListener(new CustomButtonListener());
+            btn_clearData_TB.setMargin(margins);
 
             JToolBar tool_bar = new JToolBar();
             tool_bar.setFloatable(false);       //to make a tool bar immovable.
@@ -160,7 +168,9 @@ public class MainWindow extends JFrame {
             tool_bar.addSeparator();
             tool_bar.add(btn_mail_sttngs_TB);
             tool_bar.addSeparator();
-            
+            tool_bar.add(btn_clearData_TB);
+            tool_bar.addSeparator();
+
             this_frame.add(tool_bar, BorderLayout.NORTH);
         } catch (Exception ex) {
             ex.printStackTrace();;
@@ -197,29 +207,28 @@ public class MainWindow extends JFrame {
             jSubMenu_MailSttngs.setIcon(img_mail_sttngs);
             jSubMenu_MailSttngs.setMnemonic('M');
             setting.add(jSubMenu_MailSttngs);
-            
+
             //Run Menu------------------------------------------------------------------
             JMenu run = new JMenu("Run");
             run.setMnemonic('R');
             menubar.add(run);
-            
+
             //Run Sub Menu
             jSubMenu_Execute = new JMenuItem("Execute");
             ImageIcon img_execute_16 = new ImageIcon("src/Resources/Images/execute_16.png");
             jSubMenu_Execute.setIcon(img_execute_16);
             jSubMenu_Execute.setMnemonic('E');
             run.add(jSubMenu_Execute);
-            
+
             //Run from failed step Menu
 //            jSubMenu_Run_FStep = new JMenuItem("Run from failed step");
 //            jSubMenu_Run_FStep.setMnemonic('F');
 //            run.add(jSubMenu_Run_FStep);
-
             // Help Menu------------------------------------------------------------------
             JMenu help = new JMenu("Help");
             help.setMnemonic('H');
             menubar.add(help);
-            
+
             //About
             jSubMenu_About = new JMenuItem("About");
             jSubMenu_About.setMnemonic('A');
@@ -232,6 +241,8 @@ public class MainWindow extends JFrame {
 
     public static void addComponentsToPane(Container pane) {
         try {
+            int width = 0;
+            int height = 0;
             jPanel = new JPanel(new GridBagLayout());
             GridBagConstraints gbConst = new GridBagConstraints();
 
@@ -253,34 +264,6 @@ public class MainWindow extends JFrame {
             gbConst.weighty = 5;
             gbConst.anchor = GridBagConstraints.NORTHWEST;
             jPanel.add(jScrollPane1, gbConst);
-
-            //Load Button
-//            btn_Load = new JButton("LOAD");
-//            gbConst.gridx = 0;
-//            gbConst.gridy = 0;
-//            gbConst.gridheight = 1;
-//            gbConst.gridwidth = 1;
-//            gbConst.insets = new Insets(0, 10, 0, 0);
-//            gbConst.weightx = 0;
-//            gbConst.weighty = 0;
-//            gbConst.ipady = 5;
-//            gbConst.ipadx = 50;
-//            gbConst.anchor = GridBagConstraints.WEST;
-//            jPanel.add(btn_Load, gbConst);
-
-            //Execute Button
-//            btn_Execute = new JButton("EXECUTE");
-//            gbConst.gridx = 0;
-//            gbConst.gridy = 0;
-//            gbConst.gridheight = 1;
-//            gbConst.gridwidth = 1;
-//            gbConst.insets = new Insets(0, 120, 0, 0);
-//            gbConst.weightx = 0;
-//            gbConst.weighty = 0;
-//            gbConst.ipadx = 50;
-//            gbConst.anchor = GridBagConstraints.EAST;
-//            jPanel.add(btn_Execute, gbConst);
-
 
             //ExcelPath Lbl
             lbl_ExcelPath = new JLabel("Excel Path : ");
@@ -351,10 +334,31 @@ public class MainWindow extends JFrame {
             gbConst.anchor = GridBagConstraints.WEST;
             jPanel.add(jt_TestCaseFolder_Val, gbConst);
 
+            //Display Progress Bar
+            progressBar = new JProgressBar();
+            progressBar.setIndeterminate(true);
+            progressBar.setVisible(false);
+            width = 500;
+            height = 20;
+            progressBar.setPreferredSize(new Dimension(width, height));
+            progressBar.setMaximumSize(new Dimension(width, height));
+            progressBar.setMinimumSize(new Dimension(width, height));
+            gbConst.gridx = 2;
+            gbConst.gridy = 2;
+            gbConst.gridheight = 1;
+            gbConst.gridwidth = 0;
+            gbConst.weightx = 50;
+            gbConst.weighty = 0;
+            gbConst.insets = new Insets(20, 20, 0, 0);
+            gbConst.weightx = 0;
+            gbConst.weighty = 0;
+            gbConst.anchor = GridBagConstraints.WEST;
+            jPanel.add(progressBar, gbConst);
+
             //Logs Label
             lbl_Logs = new JLabel("Logs : ");
             gbConst.gridx = 2;
-            gbConst.gridy = 2;
+            gbConst.gridy = 3;
             gbConst.gridheight = 1;
             gbConst.gridwidth = 1;
             gbConst.weightx = 50;
@@ -365,29 +369,30 @@ public class MainWindow extends JFrame {
             gbConst.anchor = GridBagConstraints.WEST;
             jPanel.add(lbl_Logs, gbConst);
 
+            
             //Logs Text Field
             jt_Execution_Logs = new JTextArea();//10, 15
-            int w = 500;
-            int h = 299;
-            jt_Execution_Logs.setPreferredSize(new Dimension(w, h));
-            jt_Execution_Logs.setMaximumSize(new Dimension(w, h));
-            jt_Execution_Logs.setMinimumSize(new Dimension(w, h));
+            width = 500;
+            height = 299;
+            jt_Execution_Logs.setPreferredSize(new Dimension(width, height));
+            jt_Execution_Logs.setMaximumSize(new Dimension(width, height));
+            jt_Execution_Logs.setMinimumSize(new Dimension(width, height));
             jt_Execution_Logs.setText("");
             jt_Execution_Logs.setLineWrap(true);    // If text doesn't fit on a line, jump to the next
             jt_Execution_Logs.setWrapStyleWord(true);   // Makes sure that words stay intact if a line wrap occurs
             jt_Execution_Logs.setEditable(false);
 
             gbConst.gridx = 2;
-            gbConst.gridy = 3;
+            gbConst.gridy = 4;
             gbConst.gridheight = 5;
             gbConst.gridwidth = 0;
             gbConst.insets = new Insets(3, 20, 0, 0);
             gbConst.anchor = GridBagConstraints.NORTHWEST;
             //gbConst.fill = GridBagConstraints.HORIZONTAL;
             JScrollPane scrollbar_Log = new JScrollPane(jt_Execution_Logs, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-            scrollbar_Log.setPreferredSize(new Dimension(w, h+5));
-            scrollbar_Log.setMaximumSize(new Dimension(w, h+5));
-            scrollbar_Log.setMinimumSize(new Dimension(w, h+5));
+            scrollbar_Log.setPreferredSize(new Dimension(width, height + 5));
+            scrollbar_Log.setMaximumSize(new Dimension(width, height + 5));
+            scrollbar_Log.setMinimumSize(new Dimension(width, height + 5));
             jPanel.add(scrollbar_Log, gbConst);
 
             //used to padding for components from the panel's edges
@@ -437,7 +442,6 @@ public class MainWindow extends JFrame {
 
 //            int tableWidth = model.getColumnCount() * 150; //not in use
 //            int tableHeight = model.getRowCount() * 25; //not in use
-
             //table.setPreferredSize(new Dimension(Constants.TABLE_WIDTH, Constants.TABLE_HEIGHT));
             table.setPreferredScrollableViewportSize(new Dimension(Constants.TABLE_WIDTH, Constants.TABLE_HEIGHT));
             //setting Table Column Header properties
@@ -478,12 +482,13 @@ public class MainWindow extends JFrame {
     public void setImportChanges(String vExcelPath, String vTestCaseFolder) {
         try {
             //setting global variables
-            gExcelPath = vExcelPath;
-            gTestCaseFolder = vTestCaseFolder;
+            //also replacing all spaces in the path with '$$', as spaces cause problems while passing to vbscript file
+            gExcelPath = vExcelPath.replace(" ", "$$");
+            gTestCaseFolder = vTestCaseFolder.replace(" ", "$$");
 
             //setting values in labels
-            jt_ExcelPath_Val.setText(gExcelPath);
-            jt_TestCaseFolder_Val.setText(gTestCaseFolder);
+            jt_ExcelPath_Val.setText(vExcelPath);
+            jt_TestCaseFolder_Val.setText(vTestCaseFolder);
 
             //Function to populate the test cases from excel to Jtable
             loadTestCases_inTable(vExcelPath);
@@ -562,6 +567,9 @@ public class MainWindow extends JFrame {
 
             LogUtility.writeToLog(jt_Execution_Logs, "Validation complete", true);
 
+            //Disable all the Actions buttons during execution
+            toggleActionButtons(true);
+
             //Resetting the Execution Log File =========================================================
             File log_file = new File(Constants.Execution_Log_Path);
             if (log_file.exists()) {
@@ -598,20 +606,61 @@ public class MainWindow extends JFrame {
         }
     }
 
-    public void runFromFStep_ButtonClick(ActionEvent ae) {
+    public void toggleActionButtons(boolean disableButtons) {//throws Exception {
+        if (disableButtons) {
+            //disabling buttons
+            btn_import_excel_TB.setEnabled(false);
+            btn_execute_TB.setEnabled(false);
+            btn_mail_sttngs_TB.setEnabled(false);
+            btn_clearData_TB.setEnabled(false);
+            
+            jSubMenu_Import.setEnabled(false);
+            jSubMenu_MailSttngs.setEnabled(false);
+            jSubMenu_Execute.setEnabled(false);
+            jSubMenu_About.setEnabled(false);
+            
+            //displaying the progress bar
+            progressBar.setVisible(true);
+        } else {
+            btn_import_excel_TB.setEnabled(true);
+            btn_execute_TB.setEnabled(true);
+            btn_mail_sttngs_TB.setEnabled(true);
+            btn_clearData_TB.setEnabled(true);
+            
+            jSubMenu_Import.setEnabled(true);
+            jSubMenu_MailSttngs.setEnabled(true);
+            jSubMenu_Execute.setEnabled(true);
+            jSubMenu_About.setEnabled(true);
+            
+            //hiding the progress bar
+            progressBar.setVisible(false);
+        }
+
+    }
+
+    public void displayAboutDialog() {
         try {
-            //open excel and look for the first fail first case
+            new About_Dlg(main_frame, "About");
 
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
-    
-    
-    public void displayAboutDialog() {
-        try {
-            new About_Dlg(main_frame, "About");
 
+    public void clearTestCaseData() {
+        try {
+            //Clearing JTable Data
+            model = (CustomTableModel) table.getModel();
+            model.setRowCount(0);
+            
+            //Clearing Excel Path
+            gExcelPath = "";
+            gTestCaseFolder = "";
+            jt_ExcelPath_Val.setText("");
+            jt_TestCaseFolder_Val.setText("");
+            
+            //Clearing Log Data
+            jt_Execution_Logs.setText("");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -631,7 +680,7 @@ public class MainWindow extends JFrame {
             //chk if Excel has not been imported by the user
             if (gExcelPath == null || gExcelPath.equals("")) {
                 JOptionPane.showMessageDialog(this,
-                        "Please import the Test Cases excel file first by clicking the Load button!",
+                        "Please import the Test Cases excel file first by clicking the \"Import Test Cases\" button!",
                         "Incomplete Input!!", JOptionPane.WARNING_MESSAGE);
                 btn_import_excel_TB.requestFocus();
                 return false;
@@ -755,6 +804,8 @@ public class MainWindow extends JFrame {
         @Override
         protected void done() {
             System.out.println("inside done...");
+            //Enable all the Actions buttons during execution
+            toggleActionButtons(false);
         }
 
         public void generateSummaryResult() throws Exception {
@@ -795,16 +846,6 @@ public class MainWindow extends JFrame {
                 Cell cell = null;
                 Cell cell_hdr = curr_row.getCell((short) testResultsCol_Pos);
 
-                //Cell cell_hdr = sheet.getCell(tot_cols, 0);
-
-                //--
-
-                //Examine from here... cell_hdr is being set as null     
-                if (cell_hdr == null) {
-                    System.out.println("cell_hdr is null================");
-                } else {
-                    System.out.println("cell_hdr = " + cell_hdr.getStringCellValue());
-                }
                 if (cell_hdr != null && cell_hdr.getStringCellValue().trim().equalsIgnoreCase("Test_Results")) {
 
                     //loop through all the rows
@@ -967,7 +1008,6 @@ public class MainWindow extends JFrame {
                         cell = curr_row.getCell(col);
                         //cell = vSheet.getCell(col, row);
 
-
                         if (col == (tot_cols - 1)) {
                             //Red background for Pass ; Green Bg for failed test cases
                             if (cell.getStringCellValue().equalsIgnoreCase("Fail")) {
@@ -1114,14 +1154,16 @@ public class MainWindow extends JFrame {
             } else if (ae.getSource() == btn_execute_TB || ae.getSource() == jSubMenu_Execute) {
                 execute_ButtonClick(ae);
             } else if (ae.getSource() == jSubMenu_Run_FStep) {
-                runFromFStep_ButtonClick(ae);
+                //runFromFStep_ButtonClick(ae);
             } else if (ae.getSource() == jSubMenu_Exit) {
                 exit_MenuClick(ae);
             } else if (ae.getSource() == jSubMenu_MailSttngs || ae.getSource() == btn_mail_sttngs_TB) {
                 mail_MenuClick(ae);
             } else if (ae.getSource() == jSubMenu_About) {
                 displayAboutDialog();
-            } 
+            } else if (ae.getSource() == btn_clearData_TB) {
+                clearTestCaseData();
+            }
         }
     }
 }

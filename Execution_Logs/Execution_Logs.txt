@@ -1,1 +1,5 @@
-Launching QTP....
+Retrieving the selected Testcases
+Loading Test Case : ToursLogin
+Starting Test Case : ToursLogin
+Execution complete...All test cases have been executed
+Ending

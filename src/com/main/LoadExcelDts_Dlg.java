@@ -182,8 +182,8 @@ public class LoadExcelDts_Dlg extends JDialog {
             }
 
             //replacing all spaces in the path with '$$', as spaces cause problems while passing to vbscript file
-            excelPath = excelPath.replace(" ", "$$");
-            testCaseFolder = testCaseFolder.replace(" ", "$$");
+//            excelPath = excelPath.replace(" ", "$$");
+//            testCaseFolder = testCaseFolder.replace(" ", "$$");
 
             if (parent_Window != null) {
                 parent_Window.setImportChanges(excelPath, testCaseFolder);
