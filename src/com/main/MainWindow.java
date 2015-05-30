@@ -968,15 +968,79 @@ public class MainWindow extends JFrame {
             sendMail(mailTemplate, summaryHTML, true);
         }
 
+//        private String generateHTML_TestCases(Sheet vSheet, String vTestCaseName) {
+//            StringBuffer html = new StringBuffer();
+//            Cell cell = null;
+//            String colHeader_css = ";font-weight:bold;text-align:center;background:#B8B8B8";
+//            String row_css = "border:1px solid #ccc;padding:4px;";
+//            String css = "";
+//            int tot_rows = 0;
+//            int tot_cols = 0;
+//            Row curr_row = null;
+//            try {
+//                tot_rows = ExcelUtility.getTotalRows(vSheet);
+//                tot_cols = ExcelUtility.getTotalColumns(vSheet);
+//
+//                html.append("<span style='font-weight:bold'>Dear Sir, </span><br/>");
+//                html.append("<span style='margin-left:25px;'>Following are the results of Test case : </span>");
+//                html.append("<span style='font-weight:bold;'>").append(vTestCaseName).append("</span>");
+//                html.append("<br/><br/><br/>");
+//
+//                html.append("<table style='width:70%;border:1px solid #ccc;border-collapse: collapse;' cellspacing=0 cellpadding=0>");
+//
+//                //first header row
+//                html.append("<tr>");
+//                html.append("<td style='" + row_css + colHeader_css + "' colspan=" + (tot_cols - 1) + ">Test Data Used</td>");
+//                html.append("<td style='" + colHeader_css + "'>Results</td>");
+//                html.append("</tr>");
+//
+//                for (int row = 0; row < tot_rows; row++) {
+//                    if (row == 0) {
+//                        css = colHeader_css;
+//                    } else {
+//                        css = "";
+//                    }
+//
+//                    html.append("<tr>");
+//                    for (int col = 0; col < tot_cols; col++) {
+//                        String bgColor = "";
+//                        curr_row = ExcelUtility.getExcelRow_BySheet(vSheet, Constants.IS_XLSX, row);
+//                        cell = curr_row.getCell(col);
+//                        //cell = vSheet.getCell(col, row);
+//
+//                        if (col == (tot_cols - 1)) {
+//                            //Red background for Pass ; Green Bg for failed test cases
+//                            if (cell.getStringCellValue().equalsIgnoreCase("Fail")) {
+//                                bgColor = "background: #FF8566";
+//                            } else if (cell.getStringCellValue().equalsIgnoreCase("Pass")) {
+//                                bgColor = "background: #66FF66";
+//                            }
+//                        }
+//
+//                        html.append("<td style='").append(row_css).append(bgColor).append(css).append("'>");
+//                        html.append(ExcelUtility.getCellValue_Str(cell));
+//                        html.append("</td>");
+//                    }
+//                    html.append("</tr>");
+//                }
+//                html.append("</table>");
+//            } catch (Exception ex) {
+//                ex.printStackTrace();
+//            }
+//            return html.toString();
+//        }
+
         private String generateHTML_TestCases(Sheet vSheet, String vTestCaseName) {
             StringBuffer html = new StringBuffer();
+            StringBuffer rowData = new StringBuffer();
             Cell cell = null;
-            String colHeader_css = ";font-weight:bold;text-align:center;background:#B8B8B8";
-            String row_css = "border:1px solid #ccc;padding:4px;";
+            String colHeader_css = "font-weight:bold;text-align:center;";
+            String row_css = "color:#ffffff; margin:0; font-family:arial; padding:5px 0; font-size:16px; line-height:16px;";
             String css = "";
             int tot_rows = 0;
             int tot_cols = 0;
             Row curr_row = null;
+            String bgColor = "";
             try {
                 tot_rows = ExcelUtility.getTotalRows(vSheet);
                 tot_cols = ExcelUtility.getTotalColumns(vSheet);
@@ -986,12 +1050,12 @@ public class MainWindow extends JFrame {
                 html.append("<span style='font-weight:bold;'>").append(vTestCaseName).append("</span>");
                 html.append("<br/><br/><br/>");
 
-                html.append("<table style='width:70%;border:1px solid #ccc;border-collapse: collapse;' cellspacing=0 cellpadding=0>");
+                html.append("<table style=\"width:70%;border:'1px solid #ffffff';border-collapse: collapse;\" border=\"1\"  >");
 
                 //first header row
-                html.append("<tr>");
+                html.append("<tr bgcolor=\"#34495e\">");
                 html.append("<td style='" + row_css + colHeader_css + "' colspan=" + (tot_cols - 1) + ">Test Data Used</td>");
-                html.append("<td style='" + colHeader_css + "'>Results</td>");
+                html.append("<td style='" + row_css + colHeader_css + "'>Results</td>");
                 html.append("</tr>");
 
                 for (int row = 0; row < tot_rows; row++) {
@@ -1001,9 +1065,12 @@ public class MainWindow extends JFrame {
                         css = "";
                     }
 
-                    html.append("<tr>");
+                    //Clear the row buffer 
+                    rowData.delete(0, rowData.length());
+                    
                     for (int col = 0; col < tot_cols; col++) {
-                        String bgColor = "";
+                        bgColor = "bgcolor = \"#34495e\"";
+                        
                         curr_row = ExcelUtility.getExcelRow_BySheet(vSheet, Constants.IS_XLSX, row);
                         cell = curr_row.getCell(col);
                         //cell = vSheet.getCell(col, row);
@@ -1011,22 +1078,27 @@ public class MainWindow extends JFrame {
                         if (col == (tot_cols - 1)) {
                             //Red background for Pass ; Green Bg for failed test cases
                             if (cell.getStringCellValue().equalsIgnoreCase("Fail")) {
-                                bgColor = "background: #FF8566";
+                                bgColor = "bgcolor = \"#e84c3d\"";
                             } else if (cell.getStringCellValue().equalsIgnoreCase("Pass")) {
-                                bgColor = "background: #66FF66";
+                                bgColor = "bgcolor = \"#2fcc71\"";
                             }
                         }
-
-                        html.append("<td style='").append(row_css).append(bgColor).append(css).append("'>");
-                        html.append(ExcelUtility.getCellValue_Str(cell));
-                        html.append("</td>");
+                        
+                        rowData.append("<td style='").append(row_css).append(css).append("'>");
+                        rowData.append("<p style='margin-left:3px'>");
+                        rowData.append(ExcelUtility.getCellValue_Str(cell));
+                        rowData.append("</p>");
+                        rowData.append("</td>");
                     }
+                    html.append("<tr "+bgColor+">");
+                    html.append(rowData);
                     html.append("</tr>");
                 }
                 html.append("</table>");
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+            System.out.println("html gen = "+html);
             return html.toString();
         }
 
