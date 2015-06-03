@@ -46,10 +46,10 @@ public class MailSettings_Dlg extends JDialog {
     private static JButton btn_Cancel;
     ConfigUtility configUtil = new ConfigUtility();
 
-    public MailSettings_Dlg(JFrame parentFrame, String title) {
+    public MailSettings_Dlg(JFrame parentFrame, String title, boolean isVisible) {
         super(parentFrame, title, true);
         this.parent_Window = (MainWindow) parentFrame;
-
+        
         //setting padding for the border layout
         int hGap = 0, vGap = 5;
         this.setLayout(new BorderLayout(hGap, vGap));
@@ -62,7 +62,7 @@ public class MailSettings_Dlg extends JDialog {
         createUI_MailTemp();
         load_Template_Data();
 
-        createUI(parent_Window, this);
+        createUI(parent_Window, this, isVisible);
     }
 
     public void createUI_SMTP() {
@@ -246,8 +246,7 @@ public class MailSettings_Dlg extends JDialog {
         btn_Cancel.addActionListener(new CustomActionListener());
     }
 
-    public void createUI(MainWindow parentFrame, MailSettings_Dlg this_frame) {
-
+    public void createUI(MainWindow parentFrame, MailSettings_Dlg this_frame, boolean isVisible) {
         JLabel lbl_mail = new JLabel(" Mail Settings");
         java.awt.Font font_Heading = new java.awt.Font("TimesRoman", Font.BOLD, 20);
         lbl_mail.setFont(font_Heading);
@@ -275,7 +274,7 @@ public class MailSettings_Dlg extends JDialog {
         this_frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this_frame.setResizable(false);
         this_frame.pack();
-        this_frame.setVisible(true);
+        this_frame.setVisible(isVisible);
     }
 
     private void load_SMTP_Data() {
@@ -456,16 +455,11 @@ class TextChangeListener implements DocumentListener {
     }
 
     public void handleTextChange(DocumentEvent e) {
-        System.out.println("Inside ......");
         Document doc = (Document) e.getDocument();
         
-        if(btn_Apply_temp == null){
-            System.out.println("it is null");
-        }
         //disable the "Apply" button if text has been changed
         if(btn_Apply_temp!=null && !btn_Apply_temp.isEnabled()){
             btn_Apply_temp.setEnabled(true);
         }
-        System.out.println("after.....");
     }
 }

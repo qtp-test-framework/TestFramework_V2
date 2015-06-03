@@ -26,4 +26,6 @@ public class Constants {
     public static boolean IS_XLSX = false;
     
     public static final String LOGO_ABOUT = "src/Resources/Images/Logo_About.png";
+    public static final String ICON_IMAGE = "src/Resources/Images/icon_image.png";
+    
 }

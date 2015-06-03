@@ -69,6 +69,11 @@ public class MainWindow extends JFrame {
 
     public MainWindow(String title) {
         super(title);
+        
+        //Setting application icon image
+        ImageIcon img_icon = new ImageIcon(Constants.ICON_IMAGE);
+        setIconImage(img_icon.getImage());
+        
         this.main_frame = (MainWindow) this;
         this.setLayout(new BorderLayout());
 
@@ -97,6 +102,7 @@ public class MainWindow extends JFrame {
         this.setVisible(true);
     }
 
+    //Code Moved to Splash Screen Class
 //    public static void main(String args[]) {
 //        try {
 //            //Get System (Microsoft Windows) Look and Feel
@@ -119,7 +125,7 @@ public class MainWindow extends JFrame {
 //            }
 //        });
 //    }
-
+    
     public void loadUserPrefData() {
         //API for persistent storage of user preferences
         user_prefs = Preferences.userNodeForPackage(MainWindow.class);
@@ -669,7 +675,7 @@ public class MainWindow extends JFrame {
     //Email Settings Dialog
     public void mail_MenuClick(ActionEvent ae) {
         try {
-            new MailSettings_Dlg(main_frame, "Mail Settings");
+            new MailSettings_Dlg(main_frame, "Mail Settings", true);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

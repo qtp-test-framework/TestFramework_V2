@@ -1,5 +1,6 @@
 package com.main;
 
+import com.mail.MailSettings_Dlg;
 import com.util.Constants;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -22,7 +23,7 @@ public class ShowSplashScreen {
         try {
             //Get System (Microsoft Windows) Look and Feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
+            
         } catch (ClassNotFoundException ex) {
             java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
@@ -61,6 +62,13 @@ public class ShowSplashScreen {
         for (int i = 1; i <= 20; i++) {   // pretend we have 10 things to do
             int pctDone = i * 5;       // this is about the only time I could calculate rather than guess progress
 //            splashText("Doing task #" + i);     // tell the user what initialization task is being done
+            
+            //As MailSettings dialog takes more the 2 secs to load on first execution
+            //so loading the class in splash screen
+            if(i==18){
+                new MailSettings_Dlg(null, "Mail Settings", false);
+            }
+            
             splashProgress(pctDone);            // give them an idea how much we have completed
             try {
                 Thread.sleep(20);             // wait a second
