@@ -15,10 +15,6 @@ public class MailClient {
         final String userName = smtpProperties.getProperty("mail.user");
         final String password = smtpProperties.getProperty("mail.password");
 
-        System.out.println("userName = " + userName);
-        System.out.println("password = " + password);
-        System.out.println("toAddress = " + toAddress);
-
         // creates a new session with an authenticator
         Authenticator auth = new Authenticator() {
 

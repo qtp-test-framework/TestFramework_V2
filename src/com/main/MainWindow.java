@@ -97,28 +97,28 @@ public class MainWindow extends JFrame {
         this.setVisible(true);
     }
 
-    public static void main(String args[]) {
-        try {
-            //Get System (Microsoft Windows) Look and Feel
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-
-        EventQueue.invokeLater(new Runnable() {
-
-            public void run() {
-                new MainWindow(Constants.APPLICATION_NAME);
-            }
-        });
-    }
+//    public static void main(String args[]) {
+//        try {
+//            //Get System (Microsoft Windows) Look and Feel
+//            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//
+//        } catch (ClassNotFoundException ex) {
+//            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        } catch (InstantiationException ex) {
+//            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        } catch (IllegalAccessException ex) {
+//            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+//            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        }
+//
+//        EventQueue.invokeLater(new Runnable() {
+//
+//            public void run() {
+//                new MainWindow(Constants.APPLICATION_NAME);
+//            }
+//        });
+//    }
 
     public void loadUserPrefData() {
         //API for persistent storage of user preferences
