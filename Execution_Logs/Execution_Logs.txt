@@ -1,7 +1,5 @@
 Retrieving the selected Testcases
-Loading Test Case : BookTicket
-Starting Test Case : BookTicket
-Loading Test Case : Test_Login_IDs
-Starting Test Case : Test_Login_IDs
-Execution complete...All test cases have been executed
-Ending
+Loading Test Case : RegisterCitizen
+Starting Test Case : RegisterCitizen
+All test cases have been executed....
+stop

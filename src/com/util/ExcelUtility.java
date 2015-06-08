@@ -85,18 +85,25 @@ public class ExcelUtility {
         return vSheet.getRow(0).getPhysicalNumberOfCells();
     }
 
-    public static String getCellValue_Str(Cell cell) {
+    public static String getCellValue_Str(Cell cell) throws Exception {
         String _return = "";
-        switch (cell.getCellType()) {
-            case Cell.CELL_TYPE_NUMERIC:
-                _return = String.valueOf(cell.getNumericCellValue()) ;
-                break;
-            case Cell.CELL_TYPE_STRING:
-                _return = cell.getStringCellValue();
-                break;
-            case Cell.CELL_TYPE_BLANK:
-                break;
 
+        //if a cell is *blank* then it is null
+        if (cell == null) {
+            _return = "";
+        } else {
+
+            switch (cell.getCellType()) {
+                case Cell.CELL_TYPE_NUMERIC:
+                    _return = String.valueOf(cell.getNumericCellValue());
+                    break;
+                case Cell.CELL_TYPE_STRING:
+                    _return = cell.getStringCellValue();
+                    break;
+                case Cell.CELL_TYPE_BLANK:
+                    _return = "";
+                    break;
+            }
         }
         return _return;
     }

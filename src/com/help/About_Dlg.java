@@ -30,10 +30,13 @@ public class About_Dlg extends JDialog {
             setLocation(p.x + parentSize.width / 6, p.y + parentSize.height / 7);
         }
 
-        this.add(new JLabel(new ImageIcon(Constants.LOGO_ABOUT)), BorderLayout.NORTH);
+        JLabel lbl_image = new JLabel(new ImageIcon(Constants.LOGO_ABOUT));
+        lbl_image.setMaximumSize(new Dimension(480, 200));
+        lbl_image.setPreferredSize(new Dimension(480, 200));
+        this.add(lbl_image, BorderLayout.NORTH);
+        //this.add(new JLabel(new ImageIcon(Constants.LOGO_ABOUT)), BorderLayout.NORTH);
 
-        String help_text = "AM Automation Framework is a framework for HP Unified Funct- ional Testing (previously QTP)."
-                + "For more information please visit www.hpqtp.com";
+        String help_text = "AM Test Automation Framework. Version 1.0 2014-15 ";
 
         JTextArea jt_AboutText = new JTextArea(4, 20);//10, 15
         jt_AboutText.setText(help_text);
@@ -41,6 +44,8 @@ public class About_Dlg extends JDialog {
         jt_AboutText.setWrapStyleWord(true);   // Makes sure that words stay intact if a line wrap occurs
         jt_AboutText.setEditable(false);
         jt_AboutText.setOpaque(false);
+        //jt_AboutText.setFont(new Font(), vGap, vGap));
+        jt_AboutText.setFont(new Font("Times New Roman", Font.BOLD, 16));
         this.add(jt_AboutText, BorderLayout.SOUTH);
 
         this.setSize(500, 200);

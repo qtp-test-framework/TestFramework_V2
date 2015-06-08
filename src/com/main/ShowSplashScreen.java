@@ -98,7 +98,8 @@ public class ShowSplashScreen {
 
             // stake out some area for our status information
 //            splashTextArea = new Rectangle2D.Double(15., height * 0.88, width * .45, 32.);
-            splashProgressArea = new Rectangle2D.Double(width * .55, height * .92, width * .4, 12);
+            //splashProgressArea = new Rectangle2D.Double(width * .55, height * .92, width * .4, 12);
+            splashProgressArea = new Rectangle2D.Double(width * .26, height * .76, width * .4, 20);
 
             // create the Graphics environment for drawing status info
             splashGraphics = mySplash.createGraphics();
@@ -146,7 +147,7 @@ public class ShowSplashScreen {
             splashGraphics.fill(splashProgressArea);
 
             // draw an outline
-            splashGraphics.setPaint(Color.BLUE);
+            splashGraphics.setPaint(Color.WHITE);
             splashGraphics.draw(splashProgressArea);
 
             // Calculate the width corresponding to the correct percentage
@@ -159,7 +160,7 @@ public class ShowSplashScreen {
             doneWidth = Math.max(0, Math.min(doneWidth, wid - 1));  // limit 0-width
 
             // fill the done part one pixel smaller than the outline
-            splashGraphics.setPaint(Color.GREEN);
+            splashGraphics.setPaint(Color.ORANGE);
             splashGraphics.fillRect(x, y + 1, doneWidth, hgt - 1);
 
             // make sure it's displayed

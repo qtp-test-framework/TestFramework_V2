@@ -69,11 +69,11 @@ public class MainWindow extends JFrame {
 
     public MainWindow(String title) {
         super(title);
-        
+
         //Setting application icon image
         ImageIcon img_icon = new ImageIcon(Constants.ICON_IMAGE);
         setIconImage(img_icon.getImage());
-        
+
         this.main_frame = (MainWindow) this;
         this.setLayout(new BorderLayout());
 
@@ -125,7 +125,6 @@ public class MainWindow extends JFrame {
 //            }
 //        });
 //    }
-    
     public void loadUserPrefData() {
         //API for persistent storage of user preferences
         user_prefs = Preferences.userNodeForPackage(MainWindow.class);
@@ -375,7 +374,6 @@ public class MainWindow extends JFrame {
             gbConst.anchor = GridBagConstraints.WEST;
             jPanel.add(lbl_Logs, gbConst);
 
-            
             //Logs Text Field
             jt_Execution_Logs = new JTextArea();//10, 15
             width = 500;
@@ -619,12 +617,12 @@ public class MainWindow extends JFrame {
             btn_execute_TB.setEnabled(false);
             btn_mail_sttngs_TB.setEnabled(false);
             btn_clearData_TB.setEnabled(false);
-            
+
             jSubMenu_Import.setEnabled(false);
             jSubMenu_MailSttngs.setEnabled(false);
             jSubMenu_Execute.setEnabled(false);
             jSubMenu_About.setEnabled(false);
-            
+
             //displaying the progress bar
             progressBar.setVisible(true);
         } else {
@@ -632,12 +630,12 @@ public class MainWindow extends JFrame {
             btn_execute_TB.setEnabled(true);
             btn_mail_sttngs_TB.setEnabled(true);
             btn_clearData_TB.setEnabled(true);
-            
+
             jSubMenu_Import.setEnabled(true);
             jSubMenu_MailSttngs.setEnabled(true);
             jSubMenu_Execute.setEnabled(true);
             jSubMenu_About.setEnabled(true);
-            
+
             //hiding the progress bar
             progressBar.setVisible(false);
         }
@@ -658,13 +656,13 @@ public class MainWindow extends JFrame {
             //Clearing JTable Data
             model = (CustomTableModel) table.getModel();
             model.setRowCount(0);
-            
+
             //Clearing Excel Path
             gExcelPath = "";
             gTestCaseFolder = "";
             jt_ExcelPath_Val.setText("");
             jt_TestCaseFolder_Val.setText("");
-            
+
             //Clearing Log Data
             jt_Execution_Logs.setText("");
         } catch (Exception ex) {
@@ -789,7 +787,6 @@ public class MainWindow extends JFrame {
 
                 //execute the MasterScript vbs file
                 Process p = Runtime.getRuntime().exec("wscript " + driverScript_path + " " + gExcelPath + "  " + gTestCaseFolder + " " + selChkBox_Str.toString());
-                //Process p = Runtime.getRuntime().exec("wscript  ../TestFramework_1/src/Resources/TestDriverScript.vbs "+gExcelPath+", "+selChkBox_Str);
                 p.waitFor();
 
                 System.out.println("Execution Complete and Exit Value = " + p.exitValue());
@@ -798,8 +795,9 @@ public class MainWindow extends JFrame {
                 }
 
                 //Send Email : Logic====================================================
-                loadResults_SendMail();
-
+                if (!isError) {
+                    loadResults_SendMail();
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -880,7 +878,7 @@ public class MainWindow extends JFrame {
         public void loadResults_SendMail() throws Exception {
             boolean canSend_TCMail = true;           //get these settings from configurations
             boolean canSend_SuiteMail = true;           //get these settings from configurations
-            isError = false;            //remove this later on
+            //isError = false;            //remove this later on
 
             if (!isError) {
                 //Loading the Mail Template Saved by user
@@ -948,6 +946,7 @@ public class MainWindow extends JFrame {
 
                 //generate the HTML Table equivalent of the Excel data
                 String htmlStr = generateHTML_TestCases(sheet, selTestCaseName_List.get(k));
+                System.out.println("htmlStr >> " + htmlStr);
 
                 //maintain the html string of all test cases in a list
                 selTestCaseHTML_List.add(htmlStr);
@@ -956,6 +955,7 @@ public class MainWindow extends JFrame {
             workbook.close();
 
             for (int list = 0; list < selTestCaseHTML_List.size(); list++) {
+                //Important::Uncomment This Later On Mohit
                 sendMail(mailTemplate, selTestCaseHTML_List.get(list), false);
             }
         }
@@ -969,72 +969,11 @@ public class MainWindow extends JFrame {
             }
 
             summaryHTML = generateHTML_Summary(testCaseSumm_list);
-            //System.out.println("summaryHTML = " + summaryHTML);
+            System.out.println("summaryHTML = " + summaryHTML);
 
+            //Important::Uncomment This Later On Mohit
             sendMail(mailTemplate, summaryHTML, true);
         }
-
-//        private String generateHTML_TestCases(Sheet vSheet, String vTestCaseName) {
-//            StringBuffer html = new StringBuffer();
-//            Cell cell = null;
-//            String colHeader_css = ";font-weight:bold;text-align:center;background:#B8B8B8";
-//            String row_css = "border:1px solid #ccc;padding:4px;";
-//            String css = "";
-//            int tot_rows = 0;
-//            int tot_cols = 0;
-//            Row curr_row = null;
-//            try {
-//                tot_rows = ExcelUtility.getTotalRows(vSheet);
-//                tot_cols = ExcelUtility.getTotalColumns(vSheet);
-//
-//                html.append("<span style='font-weight:bold'>Dear Sir, </span><br/>");
-//                html.append("<span style='margin-left:25px;'>Following are the results of Test case : </span>");
-//                html.append("<span style='font-weight:bold;'>").append(vTestCaseName).append("</span>");
-//                html.append("<br/><br/><br/>");
-//
-//                html.append("<table style='width:70%;border:1px solid #ccc;border-collapse: collapse;' cellspacing=0 cellpadding=0>");
-//
-//                //first header row
-//                html.append("<tr>");
-//                html.append("<td style='" + row_css + colHeader_css + "' colspan=" + (tot_cols - 1) + ">Test Data Used</td>");
-//                html.append("<td style='" + colHeader_css + "'>Results</td>");
-//                html.append("</tr>");
-//
-//                for (int row = 0; row < tot_rows; row++) {
-//                    if (row == 0) {
-//                        css = colHeader_css;
-//                    } else {
-//                        css = "";
-//                    }
-//
-//                    html.append("<tr>");
-//                    for (int col = 0; col < tot_cols; col++) {
-//                        String bgColor = "";
-//                        curr_row = ExcelUtility.getExcelRow_BySheet(vSheet, Constants.IS_XLSX, row);
-//                        cell = curr_row.getCell(col);
-//                        //cell = vSheet.getCell(col, row);
-//
-//                        if (col == (tot_cols - 1)) {
-//                            //Red background for Pass ; Green Bg for failed test cases
-//                            if (cell.getStringCellValue().equalsIgnoreCase("Fail")) {
-//                                bgColor = "background: #FF8566";
-//                            } else if (cell.getStringCellValue().equalsIgnoreCase("Pass")) {
-//                                bgColor = "background: #66FF66";
-//                            }
-//                        }
-//
-//                        html.append("<td style='").append(row_css).append(bgColor).append(css).append("'>");
-//                        html.append(ExcelUtility.getCellValue_Str(cell));
-//                        html.append("</td>");
-//                    }
-//                    html.append("</tr>");
-//                }
-//                html.append("</table>");
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//            }
-//            return html.toString();
-//        }
 
         private String generateHTML_TestCases(Sheet vSheet, String vTestCaseName) {
             StringBuffer html = new StringBuffer();
@@ -1073,30 +1012,30 @@ public class MainWindow extends JFrame {
 
                     //Clear the row buffer 
                     rowData.delete(0, rowData.length());
-                    
+
                     for (int col = 0; col < tot_cols; col++) {
                         bgColor = "bgcolor = \"#34495e\"";
-                        
+
                         curr_row = ExcelUtility.getExcelRow_BySheet(vSheet, Constants.IS_XLSX, row);
                         cell = curr_row.getCell(col);
                         //cell = vSheet.getCell(col, row);
 
                         if (col == (tot_cols - 1)) {
                             //Red background for Pass ; Green Bg for failed test cases
-                            if (cell.getStringCellValue().equalsIgnoreCase("Fail")) {
+                            if (cell == null || cell.getStringCellValue().equalsIgnoreCase("Fail")) {
                                 bgColor = "bgcolor = \"#e84c3d\"";
                             } else if (cell.getStringCellValue().equalsIgnoreCase("Pass")) {
                                 bgColor = "bgcolor = \"#2fcc71\"";
                             }
                         }
-                        
+
                         rowData.append("<td style='").append(row_css).append(css).append("'>");
                         rowData.append("<p style='margin-left:3px'>");
                         rowData.append(ExcelUtility.getCellValue_Str(cell));
                         rowData.append("</p>");
                         rowData.append("</td>");
                     }
-                    html.append("<tr "+bgColor+">");
+                    html.append("<tr " + bgColor + ">");
                     html.append(rowData);
                     html.append("</tr>");
                 }
@@ -1104,7 +1043,6 @@ public class MainWindow extends JFrame {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-            System.out.println("html gen = "+html);
             return html.toString();
         }
 
@@ -1194,12 +1132,12 @@ public class MainWindow extends JFrame {
                     if (line == null) {
                         Thread.sleep(500);
                     } else {
-                        LogUtility.writeToLog(jt_Execution_Logs, line, true);
-                        System.out.println(line);
-
-                        if (line.indexOf("Ending") != -1) {
+                        if (line.indexOf("stop") != -1) {
                             break;
                         }
+
+                        LogUtility.writeToLog(jt_Execution_Logs, line, true);
+                        System.out.println(line);
                     }
                 }
             } catch (Exception ex) {
